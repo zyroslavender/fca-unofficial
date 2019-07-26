@@ -1,3 +1,5 @@
+Due to the inactivity on main repo, you might want to use this repo because this repo is *slightly* newer (and *slightly* more bug, lol)
+
 # Unofficial Facebook Chat API
 <a href="https://www.npmjs.com/package/facebook-chat-api"><img alt="npm version" src="https://img.shields.io/npm/v/facebook-chat-api.svg?style=flat-square"></a>
 <a href="https://www.npmjs.com/package/facebook-chat-api"><img src="https://img.shields.io/npm/dm/facebook-chat-api.svg?style=flat-square" alt="npm downloads"></a>
