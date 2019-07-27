@@ -16,11 +16,11 @@ See [below](#projects-using-this-api) for projects using this API.
 See the [full changelog](/CHANGELOG.md) for release details.
 
 ## Install
-If you just want to use facebook-chat-api, you should use this command:
+If you just want to use fca-unofficial, you should use this command:
 ```bash
 npm install fca-unofficial
 ```
-It will download facebook-chat-api from NPM repositories
+It will download fca-unofficial from NPM repositories
 
 ### Bleeding edge
 If you want to use bleeding edge (directly from github) to test new features or submit bug report, this is the command for you:
@@ -33,7 +33,7 @@ If you want to test your bots without creating another account on Facebook, you 
 
 ## Example Usage
 ```javascript
-const login = require("facebook-chat-api");
+const login = require("fca-unofficial");
 
 // Create simple echo bot
 login({email: "FB_EMAIL", password: "FB_PASSWORD"}, (err, api) => {
@@ -108,7 +108,7 @@ __Tip__: to find your own ID, you can look inside the cookies. The `userID` is u
 
 __Example (Basic Message)__
 ```js
-const login = require("facebook-chat-api");
+const login = require("fca-unofficial");
 
 login({email: "FB_EMAIL", password: "FB_PASSWORD"}, (err, api) => {
     if(err) return console.error(err);
@@ -121,7 +121,7 @@ login({email: "FB_EMAIL", password: "FB_PASSWORD"}, (err, api) => {
 
 __Example (File upload)__
 ```js
-const login = require("facebook-chat-api");
+const login = require("fca-unofficial");
 
 login({email: "FB_EMAIL", password: "FB_PASSWORD"}, (err, api) => {
     if(err) return console.error(err);
@@ -145,7 +145,7 @@ __Example__
 
 ```js
 const fs = require("fs");
-const login = require("facebook-chat-api");
+const login = require("fca-unofficial");
 
 var credentials = {email: "FB_EMAIL", password: "FB_PASSWORD"};
 
@@ -167,7 +167,7 @@ __Example__
 
 ```js
 const fs = require("fs");
-const login = require("facebook-chat-api");
+const login = require("fca-unofficial");
 
 // Simple echo bot. It will repeat everything that you say.
 // Will stop when you say '/stop'
