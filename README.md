@@ -2,7 +2,7 @@ Due to the inactivity on main repo, you might want to use this repo because this
 
 # Unofficial Facebook Chat API
 <a href="https://www.npmjs.com/package/fca-unofficial"><img alt="npm version" src="https://img.shields.io/npm/v/fca-unofficial.svg?style=flat-square"></a>
-<img alt="version" src="https://img.shields.io/github/package-json/v/lequanglam/c3c?label=github">
+<img alt="version" src="https://img.shields.io/github/package-json/v/lequanglam/c3c?label=github&style=flat-square">
 <a href="https://www.npmjs.com/package/fca-unofficial"><img src="https://img.shields.io/npm/dm/fca-unofficial.svg?style=flat-square" alt="npm downloads"></a>
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
 
