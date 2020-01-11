@@ -22,7 +22,7 @@ module.exports = function(defaultFuncs, api, ctx) {
       throw { error: "createNewGroup: participantIDs should have at least 2 IDs." };
     }
 
-    participantIDs.map(x => { 
+    participantIDs.map(function(x) { 
       return {
         fbid: x.toString() 
       };
