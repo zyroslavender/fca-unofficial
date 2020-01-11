@@ -1,6 +1,9 @@
+Due to the inactivity on main repo, you might want to use this repo because this repo is *slightly* newer (and *slightly* more bug, lol)
+
 # Unofficial Facebook Chat API
-<a href="https://www.npmjs.com/package/facebook-chat-api"><img alt="npm version" src="https://img.shields.io/npm/v/facebook-chat-api.svg?style=flat-square"></a>
-<a href="https://www.npmjs.com/package/facebook-chat-api"><img src="https://img.shields.io/npm/dm/facebook-chat-api.svg?style=flat-square" alt="npm downloads"></a>
+<a href="https://www.npmjs.com/package/fca-unofficial"><img alt="npm version" src="https://img.shields.io/npm/v/fca-unofficial.svg?style=flat-square"></a>
+<img alt="version" src="https://img.shields.io/github/package-json/v/fca-unofficial/fca-unofficial?label=github&style=flat-square">
+<a href="https://www.npmjs.com/package/fca-unofficial"><img src="https://img.shields.io/npm/dm/fca-unofficial.svg?style=flat-square" alt="npm downloads"></a>
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
 
 Facebook now has an official API for chat bots [here](https://developers.facebook.com/docs/messenger-platform).
@@ -14,16 +17,16 @@ See [below](#projects-using-this-api) for projects using this API.
 See the [full changelog](/CHANGELOG.md) for release details.
 
 ## Install
-If you just want to use facebook-chat-api, you should use this command:
+If you just want to use fca-unofficial, you should use this command:
 ```bash
-npm install facebook-chat-api
+npm install fca-unofficial
 ```
-It will download facebook-chat-api from NPM repositories
+It will download fca-unofficial from NPM repositories
 
 ### Bleeding edge
 If you want to use bleeding edge (directly from github) to test new features or submit bug report, this is the command for you:
 ```bash
-npm install Schmavery/facebook-chat-api
+npm install fca-unofficial/fca-unofficial
 ```
 
 ## Testing your bots
@@ -31,7 +34,7 @@ If you want to test your bots without creating another account on Facebook, you 
 
 ## Example Usage
 ```javascript
-const login = require("facebook-chat-api");
+const login = require("fca-unofficial");
 
 // Create simple echo bot
 login({email: "FB_EMAIL", password: "FB_PASSWORD"}, (err, api) => {
@@ -106,7 +109,7 @@ __Tip__: to find your own ID, you can look inside the cookies. The `userID` is u
 
 __Example (Basic Message)__
 ```js
-const login = require("facebook-chat-api");
+const login = require("fca-unofficial");
 
 login({email: "FB_EMAIL", password: "FB_PASSWORD"}, (err, api) => {
     if(err) return console.error(err);
@@ -119,7 +122,7 @@ login({email: "FB_EMAIL", password: "FB_PASSWORD"}, (err, api) => {
 
 __Example (File upload)__
 ```js
-const login = require("facebook-chat-api");
+const login = require("fca-unofficial");
 
 login({email: "FB_EMAIL", password: "FB_PASSWORD"}, (err, api) => {
     if(err) return console.error(err);
@@ -143,7 +146,7 @@ __Example__
 
 ```js
 const fs = require("fs");
-const login = require("facebook-chat-api");
+const login = require("fca-unofficial");
 
 var credentials = {email: "FB_EMAIL", password: "FB_PASSWORD"};
 
@@ -165,7 +168,7 @@ __Example__
 
 ```js
 const fs = require("fs");
-const login = require("facebook-chat-api");
+const login = require("fca-unofficial");
 
 // Simple echo bot. It will repeat everything that you say.
 // Will stop when you say '/stop'
