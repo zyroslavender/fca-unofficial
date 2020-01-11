@@ -57,12 +57,6 @@ module.exports = function(defaultFuncs, api, ctx) {
         if (resData.error) {
           throw resData;
         }
-        // This returns us an array of things. The last one is the success /
-        // failure one.
-        // TODO: What do we do in this case?
-        if (resData[resData.length - 1].error_results !== 0) {
-          throw new Error("well darn there was an error_result");
-        }
 
         return callback(null, resData.data.messenger_group_thread_create.thread.thread_key.thread_fbid);
       })
