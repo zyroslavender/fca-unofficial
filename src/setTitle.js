@@ -22,7 +22,6 @@ module.exports = function(defaultFuncs, api, ctx) {
       client: "mercury",
       action_type: "ma-type:log-message",
       author: "fbid:" + ctx.userID,
-      thread_id: "",
       author_email: "",
       coordinates: "",
       timestamp: Date.now(),

@@ -55,7 +55,7 @@ module.exports = function(defaultFuncs, api, ctx) {
           fmtMsg = utils.formatReadReceipt(event);
         } catch (err) {
           globalCallback({
-            error: "Problem parsing message object. Please open an issue at https://github.com/Schmavery/fca-unofficial/issues.",
+            error: "Problem parsing message object. Please open an issue at https://github.com/Schmavery/facebook-chat-api/issues.",
             detail: err,
             res: event,
             type: "parse_error"
@@ -71,7 +71,7 @@ module.exports = function(defaultFuncs, api, ctx) {
           fmtMsg = utils.formatRead(event);
         } catch (err) {
           globalCallback({
-            error: "Problem parsing message object. Please open an issue at https://github.com/Schmavery/fca-unofficial/issues.",
+            error: "Problem parsing message object. Please open an issue at https://github.com/Schmavery/facebook-chat-api/issues.",
             detail: err,
             res: event,
             type: "parse_error"
@@ -170,7 +170,7 @@ module.exports = function(defaultFuncs, api, ctx) {
                     fmtMsg = utils.formatTyp(v);
                   } catch (err) {
                     return globalCallback({
-                      error: "Problem parsing message object. Please open an issue at https://github.com/Schmavery/fca-unofficial/issues.",
+                      error: "Problem parsing message object. Please open an issue at https://github.com/Schmavery/facebook-chat-api/issues.",
                       detail: err,
                       res: v,
                       type: "parse_error"
@@ -193,7 +193,7 @@ module.exports = function(defaultFuncs, api, ctx) {
                         );
                       } catch (err) {
                         return globalCallback({
-                          error: "Problem parsing message object. Please open an issue at https://github.com/Schmavery/fca-unofficial/issues.",
+                          error: "Problem parsing message object. Please open an issue at https://github.com/Schmavery/facebook-chat-api/issues.",
                           detail: err,
                           res: v.buddyList[userID],
                           type: "parse_error"
@@ -223,7 +223,7 @@ module.exports = function(defaultFuncs, api, ctx) {
                       );
                     } catch (err) {
                       return globalCallback({
-                        error: "Problem parsing message object. Please open an issue at https://github.com/Schmavery/fca-unofficial/issues.",
+                        error: "Problem parsing message object. Please open an issue at https://github.com/Schmavery/facebook-chat-api/issues.",
                         detail: err,
                         res: v.overlay[userID],
                         type: "parse_error"
@@ -248,7 +248,7 @@ module.exports = function(defaultFuncs, api, ctx) {
                           fmtMsg = utils.formatDeltaMessage(v);
                         } catch (err) {
                           return globalCallback({
-                            error: "Problem parsing message object. Please open an issue at https://github.com/Schmavery/fca-unofficial/issues.",
+                            error: "Problem parsing message object. Please open an issue at https://github.com/Schmavery/facebook-chat-api/issues.",
                             detail: err,
                             res: v,
                             type: "parse_error"
@@ -356,17 +356,26 @@ module.exports = function(defaultFuncs, api, ctx) {
                               .otherUserFbId,
                             messageID: delta.deltaMessageReply.message.messageMetadata.messageId,
                             senderID: delta.deltaMessageReply.message.messageMetadata.actorFbId,
-                            attachments: delta.deltaMessageReply.message.attachments,
+                            attachments: delta.deltaMessageReply.message.attachments.map(function(att) {
+                              var mercury = JSON.parse(att.mercuryJSON);
+                              Object.assign(att, mercury);
+                              return att;
+                            }).map(att => utils._formatAttachment(att)),
                             body: delta.deltaMessageReply.message.body || "",
                             isGroup: !!delta.deltaMessageReply.message.messageMetadata.threadKey.threadFbId,
                             mentions: mentions,
+                            timestamp: v.ofd_ts,
                             messageReply: {
                               threadID: delta.deltaMessageReply.repliedToMessage.messageMetadata.threadKey.threadFbId ?
                                 delta.deltaMessageReply.repliedToMessage.messageMetadata.threadKey.threadFbId : delta.deltaMessageReply.repliedToMessage.messageMetadata.threadKey
                                 .otherUserFbId,
                               messageID: delta.deltaMessageReply.repliedToMessage.messageMetadata.messageId,
                               senderID: delta.deltaMessageReply.repliedToMessage.messageMetadata.actorFbId,
-                              attachments: delta.deltaMessageReply.repliedToMessage.attachments,
+                              attachments: delta.deltaMessageReply.repliedToMessage.attachments.map(function(att) {
+                                var mercury = JSON.parse(att.mercuryJSON);
+                                Object.assign(att, mercury);
+                                return att;
+                              }).map(att => utils._formatAttachment(att)),
                               body: delta.deltaMessageReply.repliedToMessage.body || "",
                               isGroup: !!delta.deltaMessageReply.repliedToMessage.messageMetadata.threadKey.threadFbId,
                               mentions: rmentions
@@ -389,7 +398,7 @@ module.exports = function(defaultFuncs, api, ctx) {
                         fmtMsg = utils.formatDeltaReadReceipt(v.delta);
                       } catch (err) {
                         return globalCallback({
-                          error: "Problem parsing message object. Please open an issue at https://github.com/Schmavery/fca-unofficial/issues.",
+                          error: "Problem parsing message object. Please open an issue at https://github.com/Schmavery/facebook-chat-api/issues.",
                           detail: err,
                           res: v.delta,
                           type: "parse_error"
@@ -402,6 +411,20 @@ module.exports = function(defaultFuncs, api, ctx) {
                         case "change_thread_nickname":
                         case "change_thread_icon":
                           break;
+                        case "group_poll":
+                          var fmtMsg;
+                          try {
+                            fmtMsg = utils.formatDeltaEvent(v.delta);
+                          } catch (err) {
+                            return globalCallback({
+                              error: "Problem parsing message object. Please open an issue at https://github.com/Schmavery/facebook-chat-api/issues.",
+                              detail: err,
+                              res: v.delta,
+                              type: "parse_error"
+                            });
+                          }
+                          return globalCallback(null, fmtMsg);
+                          break;
                         default:
                           return;
                       }
@@ -413,7 +436,7 @@ module.exports = function(defaultFuncs, api, ctx) {
                           formattedEvent = utils.formatDeltaEvent(v.delta);
                         } catch (err) {
                           return globalCallback({
-                            error: "Problem parsing message object. Please open an issue at https://github.com/Schmavery/fca-unofficial/issues.",
+                            error: "Problem parsing message object. Please open an issue at https://github.com/Schmavery/facebook-chat-api/issues.",
                             detail: err,
                             res: v.delta,
                             type: "parse_error"
@@ -453,7 +476,7 @@ module.exports = function(defaultFuncs, api, ctx) {
                       fmtMsg = utils.formatMessage(v);
                     } catch (err) {
                       return globalCallback({
-                        error: "Problem parsing message object. Please open an issue at https://github.com/Schmavery/fca-unofficial/issues.",
+                        error: "Problem parsing message object. Please open an issue at https://github.com/Schmavery/facebook-chat-api/issues.",
                         detail: err,
                         res: v,
                         type: "parse_error"

@@ -25,7 +25,9 @@
 * [`api.getUserInfo`](#getUserInfo)
 * [`api.handleMessageRequest`](#handleMessageRequest)
 * [`api.listen`](#listen)
+* [`api.listenMqtt`](#listenMqtt)
 * [`api.logout`](#logout)
+* [`api.markAsDelivered`](#markAsDelivered)
 * [`api.markAsRead`](#markAsRead)
 * [`api.markAsReadAll`](#markAsReadAll)
 * [`api.muteThread`](#muteThread)
@@ -1308,6 +1310,22 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
 
 ---------------------------------------
 
+<a name="listenMqtt"></a>
+### api.listenMqtt(callback) (Experimental)
+Same as [`api.listen`](#listen) but uses MQTT to recieve data.
+
+Will call `callback` when a new message is received on this account.
+By default this won't receive events (joining/leaving a chat, title change etc...) but it can be activated with `api.setOptions({listenEvents: true})`.  This will by default ignore messages sent by the current account, you can enable listening to your own messages with `api.setOptions({selfListen: true})`. This returns `stopListening` that will stop the `listen` loop and is guaranteed to prevent any future calls to the callback given to `listenMqtt`. An immediate call to `stopListening` when an error occurs will prevent the listen function to continue.
+
+
+__Arguments__
+
+- `callback(error, message)`: A callback called every time the logged-in account receives a new message.
+
+Messages and Events are the same as [`api.listen`](#listen)
+
+---------------------------------------
+
 <a name="logout"></a>
 ### api.logout([callback])
 
@@ -1319,10 +1337,45 @@ __Arguments__
 
 ---------------------------------------
 
+<a name="markAsDelivered"></a>
+### api.markAsDelivered(threadID, messageID[, callback]])
+
+Given a threadID and a messageID will mark that message as delivered. If a message is marked as delivered that tells facebook servers that it was recieved.
+
+You can also mark new messages as delivered automatically. This is enabled by default. See [api.setOptions](#setOptions).
+
+__Arguments__
+
+* `threadID` - The id of the thread in which you want to mark the message as delivered.
+* `messageID` - The id of the message want to mark as delivered.
+* `callback(err)` - A callback called when the operation is done maybe with an object representing an error.
+
+__Example__
+
+```js
+const fs = require("fs");
+const login = require("facebook-chat-api");
+
+login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, api) => {
+    if(err) return console.error(err);
+
+    api.listen((err, message) => {
+        if(err) return console.error(err);
+
+        // Marks messages as delivered immediately after they're received
+        api.markAsDelivered(message.threadID, message.messageID);
+    });
+});
+```
+
+---------------------------------------
+
 <a name="markAsRead"></a>
 ### api.markAsRead(threadID, [read[, callback]])
 
 Given a threadID will mark all the unread messages as read. Facebook will take a couple of seconds to show that you've read the messages.
+
+You can also mark new messages as read automatically. See [api.setOptions](#setOptions).
 
 __Arguments__
 
@@ -1429,7 +1482,7 @@ __Arguments__
 ---------------------------------------
 
 <a name="sendMessage"></a>
-### api.sendMessage(message, threadID[, callback[, messageID]])
+### api.sendMessage(message, threadID[, callback][, messageID])
 
 Sends the given message to the threadID.
 
@@ -1437,7 +1490,7 @@ __Arguments__
 
 * `message`: A string (for backward compatibility) or a message object as described below.
 * `threadID`: A string, number, or array representing a thread. It happens to be someone's userID in the case of a one to one conversation or an array of userIDs when starting a new group chat.
-* `callback(err, messageInfo)`: A callback called when sending the message is done (either with an error or with an confirmation object). `messageInfo` contains the `threadID` where the message was sent and a `messageID`, as well as the `timestamp` of the message.
+* `callback(err, messageInfo)`: (Optional) A callback called when sending the message is done (either with an error or with an confirmation object). `messageInfo` contains the `threadID` where the message was sent and a `messageID`, as well as the `timestamp` of the message.
 * `messageID`: (Optional) A string representing a message you want to reply.
 
 __Message Object__:
@@ -1571,6 +1624,8 @@ __Arguments__
     - `updatePresence`: (Default `false`) Will make [api.listen](#listen) also return `presence` ([api.listen](#presence) for more details).
     - `forceLogin`: (Default `false`) Will automatically approve of any recent logins and continue with the login process.
     - `userAgent`: (Default `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/600.3.18 (KHTML, like Gecko) Version/8.0.3 Safari/600.3.18`) The desired simulated User Agent.
+	- `autoMarkDelivery`: (Default `true`) Will automatically mark new messages as delivered. See [api.markAsDelivered](#markAsDelivered).
+	- `autoMarkRead`: (Default `false`) Will automatically mark new messages as read/seen. See [api.markAsRead](#markAsRead).
 
 __Example__
 
@@ -1619,9 +1674,9 @@ __Arguments__
 <a name="unsendMessage"></a>
 ### api.unsendMessage(messageID[, callback])
 
-Revoke a message from anyone could see that message with `messageID`
+Revokes a message from anyone that could see that message with `messageID`
 
-Note: This will only work if the message is sent by you and sent less than 10 minutes ago.
+Note: This will only work if the message is sent by you and was sent less than 10 minutes ago.
 
 __Arguments__
 
