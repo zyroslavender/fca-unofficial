@@ -22,12 +22,13 @@ module.exports = function(defaultFuncs, api, ctx) {
       throw { error: "createNewGroup: participantIDs should have at least 2 IDs." };
     }
 
+    var pids = [];
     for (var n in participantIDs) {
-      participantIDs[n] = {
+      pids.push({
         fbid: participantIDs[n]
-      };
+      });
     }
-    participantIDs.push({fbid: ctx.userID});
+    pids.push({fbid: ctx.userID});
 
     var form = {
       fb_api_caller_class: "RelayModern",
@@ -39,7 +40,7 @@ module.exports = function(defaultFuncs, api, ctx) {
         input: {
           entry_point: "jewel_new_group",
           actor_id: ctx.userID,
-          participants: participantIDs,
+          participants: pids,
           client_mutation_id: "0",
           thread_settings: {
             name: groupTitle,
