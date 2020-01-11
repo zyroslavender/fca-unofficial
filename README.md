@@ -1,4 +1,4 @@
-Due to the inactivity on main repo, you might want to use this repo because this repo is *slightly* newer (and *slightly* more bug, lol)
+This repo is a fork from main repo and will usually have new features bundled faster than main repo (and maybe bundle some bugs, too).
 
 # Unofficial Facebook Chat API
 <a href="https://www.npmjs.com/package/fca-unofficial"><img alt="npm version" src="https://img.shields.io/npm/v/fca-unofficial.svg?style=flat-square"></a>
@@ -177,7 +177,7 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
 
     api.setOptions({listenEvents: true});
 
-    var stopListening = api.listen((err, event) => {
+    var stopListening = api.listenMqtt((err, event) => {
         if(err) return console.error(err);
 
         api.markAsRead(event.threadID, (err) => {
