@@ -22,8 +22,12 @@ module.exports = function(defaultFuncs, api, ctx) {
       throw { error: "createNewGroup: participantIDs should have at least 2 IDs." };
     }
 
-    participantIDs.map(x => x.toString());
-    participantIDs.push(ctx.userID);
+    participantIDs.map(x => { 
+      return {
+        fbid: x.toString() 
+      };
+    });
+    participantIDs.push({fbid: ctx.userID});
 
     var form = {
       fb_api_caller_class: "RelayModern",
@@ -36,7 +40,7 @@ module.exports = function(defaultFuncs, api, ctx) {
           entry_point: "jewel_new_group",
           actor_id: ctx.userID,
           participants: participantIDs,
-          client_mutation_id: "2",
+          //client_mutation_id: "2",
           thread_settings: {
             name: groupTitle,
             joinable_mode: "PRIVATE",
@@ -54,7 +58,7 @@ module.exports = function(defaultFuncs, api, ctx) {
       )
       .then(utils.parseAndCheckLogin(ctx, defaultFuncs))
       .then(function(resData) {
-        if (resData.error) {
+        if (resData.errors) {
           throw resData;
         }
         //resData.data.messenger_group_thread_create.thread.thread_key.thread_fbid
