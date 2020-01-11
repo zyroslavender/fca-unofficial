@@ -40,7 +40,7 @@ module.exports = function(defaultFuncs, api, ctx) {
           entry_point: "jewel_new_group",
           actor_id: ctx.userID,
           participants: participantIDs,
-          //client_mutation_id: "2",
+          client_mutation_id: "0",
           thread_settings: {
             name: groupTitle,
             joinable_mode: "PRIVATE",
@@ -61,8 +61,7 @@ module.exports = function(defaultFuncs, api, ctx) {
         if (resData.errors) {
           throw resData;
         }
-        //resData.data.messenger_group_thread_create.thread.thread_key.thread_fbid
-        return callback(null, resData);
+        return callback(null, resData.data.messenger_group_thread_create.thread.thread_key.thread_fbid);
       })
       .catch(function(err) {
         log.error("createNewGroup", err);
