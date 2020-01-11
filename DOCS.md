@@ -10,6 +10,7 @@
 * [`api.changeThreadColor`](#changeThreadColor)
 * [`api.changeThreadEmoji`](#changeThreadEmoji)
 * [`api.createPoll`](#createPoll)
+* [`api.createNewGroup`](#createNewGroup)
 * [`api.deleteMessage`](#deleteMessage)
 * [`api.deleteThread`](#deleteThread)
 * [`api.forwardAttachment`](#forwardAttachment)
@@ -398,6 +399,18 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
     });
 });
 ```
+
+---------------------------------------
+
+<a name="createNewGroup"></a>
+### api.createNewGroup(participantIDs[, title], callback)
+
+Create a new thread.
+
+__Arguments__
+* `participantIDs`: An array contains at least 2 IDs.
+* `title`: (Optional) Thread title.
+* `callback(err, threadID)`: A callback called when created a new thread (either with an error or threadID of new thread).
 
 ---------------------------------------
 
