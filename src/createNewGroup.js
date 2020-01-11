@@ -57,8 +57,8 @@ module.exports = function(defaultFuncs, api, ctx) {
         if (resData.error) {
           throw resData;
         }
-
-        return callback(null, resData.data.messenger_group_thread_create.thread.thread_key.thread_fbid);
+        //resData.data.messenger_group_thread_create.thread.thread_key.thread_fbid
+        return callback(null, resData);
       })
       .catch(function(err) {
         log.error("createNewGroup", err);
