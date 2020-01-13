@@ -258,7 +258,7 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
             var rmentions = {};
 
             for (var i = 0; i < m_id.length; i++) {
-              rmentions[m_id[i]] = delta.deltaMessageReply.repliedToMessage.body.substring(
+              rmentions[m_id[i]] = (delta.deltaMessageReply.repliedToMessage.body || "").substring(
                 m_offset[i],
                 m_offset[i] + m_length[i]
               );
