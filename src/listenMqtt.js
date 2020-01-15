@@ -274,7 +274,16 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
                 var mercury = JSON.parse(att.mercuryJSON);
                 Object.assign(att, mercury);
                 return att;
-              }).map(att => utils._formatAttachment(att)),
+              }).map(att => {
+                var x;
+                try {
+                  x = utils._formatAttachment(att);
+                } catch (ex) {
+                  x = att;
+                  x.error = ex;
+                }
+                return x;
+              }),
               body: delta.deltaMessageReply.repliedToMessage.body || "",
               isGroup: !!delta.deltaMessageReply.repliedToMessage.messageMetadata.threadKey.threadFbId,
               mentions: rmentions,
