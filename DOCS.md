@@ -1060,7 +1060,7 @@ The message object will contain different fields based on its type (as determine
 	<tr>
 		<td rowspan="6">
 			<code>"event"</code><br />
-			An event occurred within a thread.
+			An event occurred within a thread. Note that receiving this event type needs to be enabled with api.setOptions({ listenEvents: true })
 		</td>
 		<td><code>author</code></td>
 		<td>The person who performed the event.</td>
@@ -1088,7 +1088,8 @@ The message object will contain different fields based on its type (as determine
 	<tr>
 		<td rowspan="5">
 			<code>"typ"</code><br />
-			A user in a thread is typing.
+			A user in a thread is typing. Note that receiving this event type needs to be enabled with api.setOptions({ listenTyping: true })
+			
 		</td>
 		<td><code>from</code></td>
 		<td>ID of the user who started/stopped typing.</td>
@@ -1633,7 +1634,8 @@ __Arguments__
       caution, as it can result in loops (a simple echo bot will send messages
       forever).
     - `listenEvents`: (Default `false`) Will make [api.listen](#listen) also handle events (look at api.listen for more details).
-    - `pageID`: (Default empty) Makes [api.listen](#listen) only receive messages through the page specified by that ID. Also makes `sendMessage` and `sendSticker` send from the page.
+	- `listenEvents`: (Default `false`) Will make [api.listen](#listen) also handle typing events (look at api.listen for more details).
+    - `pageID`: (Default empty) Makes [api.listen](#listen) only receive messages through the page specified by that ID. Also makes [api.sendMessage](#sendMessage) send from the page.
     - `updatePresence`: (Default `false`) Will make [api.listen](#listen) also return `presence` ([api.listen](#presence) for more details).
     - `forceLogin`: (Default `false`) Will automatically approve of any recent logins and continue with the login process.
     - `userAgent`: (Default `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/600.3.18 (KHTML, like Gecko) Version/8.0.3 Safari/600.3.18`) The desired simulated User Agent.

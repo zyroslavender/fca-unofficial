@@ -42,6 +42,9 @@ function setOptions(globalOptions, options) {
       case 'autoMarkRead':
         globalOptions.autoMarkRead = options.autoMarkRead;
         break;
+      case 'listenTyping':
+        globalOptions.listenTyping = options.listenTyping;
+        break;
       default:
         log.warn("setOptions", "Unrecognized option given to setOptions: " + key);
         break;
@@ -467,6 +470,7 @@ function login(loginData, options, callback) {
   var globalOptions = {
     selfListen: false,
     listenEvents: false,
+    listenTyping: false,
     updatePresence: false,
     forceLogin: false,
     autoMarkDelivery: true,

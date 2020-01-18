@@ -1,3 +1,4 @@
+/* eslint-disable no-redeclare */
 "use strict";
 var fbconnect = require("./mqtt/fbconnect");
 var utils = require("../utils");
@@ -29,7 +30,8 @@ function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
   };
   var cookies = ctx.jar.getCookies("https://www.facebook.com").join("; ");
 
-  //Region could be changed for better ping.
+  //Region could be changed for better ping. (Region atn: Southeast Asia, region ash: West US, prob)
+  //Region
   var host = 'wss://edge-chat.facebook.com/chat?region=atn&sid=' + sessionID;
 
   var options = {
@@ -58,9 +60,13 @@ function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
   });
 
   client.on('connect', function () {
-    client.subscribe(["/legacy_web", "/webrtc", "/br_sr", "/sr_res", "/t_ms", "/thread_typing", "/orca_typing_notifications", "/notify_disconnect", "/orca_presence"],
-      (err, granted) => {
-        client.unsubscribe('/orca_message_notifications', (err) => {
+    var subscribelist = ["/t_ms"];
+    ctx.globalOptions.updatePresence ? subscribelist.push("/orca_presence") : "";
+    ctx.globalOptions.listenTyping ? subscribelist.push("/thread_typing", "/orca_typing_notifications") : "";
+    //client.subscribe(["/legacy_web", "/webrtc", "/br_sr", "/sr_res", "/thread_typing", "/orca_typing_notifications", "/notify_disconnect", "/orca_presence"],
+    client.subscribe(subscribelist,
+      (_err, _granted) => {
+        client.unsubscribe('/orca_message_notifications', (_err) => {
           var queue = {
             sync_api_version: 10,
             max_deltas_able_to_process: 1000,
@@ -71,12 +77,12 @@ function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
             device_params: null
           };
 
-          client.publish('/messenger_sync_create_queue', JSON.stringify(queue), { qos: 0, retain: false })
+          client.publish('/messenger_sync_create_queue', JSON.stringify(queue), { qos: 0, retain: false });
         });
       });
   });
 
-  client.on('message', function (topic, message, packet) {
+  client.on('message', function (topic, message, _packet) {
     var jsonMessage = JSON.parse(message);
     if (topic === "/t_ms") {
       if (jsonMessage.lastIssuedSeqId) {
@@ -98,8 +104,8 @@ function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
         isTyping: !!jsonMessage.state,
         from: jsonMessage.sender_fbid.toString(),
         threadID: utils.formatID((jsonMessage.thread || jsonMessage.sender_fbid).toString())
-      }
-      globalCallback(null, typ);
+      };
+      (function () { globalCallback(null, typ); })();
     } else if (topic === "/orca_presence") {
       if (!ctx.globalOptions.updatePresence) {
         for (var i in jsonMessage.list) {
@@ -108,12 +114,12 @@ function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
 
           var presence = {
             type: "presence",
-            userID: userID,
+            userID: userID.toString(),
             //Convert to ms
             timestamp: data["l"] * 1000,
             statuses: data["p"]
           };
-          globalCallback(null, presence);
+          (function () { globalCallback(null, presence); })();
         }
       }
     }
@@ -147,7 +153,7 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
           });
         }
         if (fmtMsg) {
-          if (!!ctx.globalOptions.autoMarkDelivery) {
+          if (ctx.globalOptions.autoMarkDelivery) {
             markDelivery(ctx, api, fmtMsg.threadID, fmtMsg.messageID);
           }
         }
@@ -186,23 +192,23 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
         if (delta.deltaMessageReaction && !!ctx.globalOptions.listenEvents) {
           globalCallback(null, {
             type: "message_reaction",
-            threadID: delta.deltaMessageReaction.threadKey
+            threadID: (delta.deltaMessageReaction.threadKey
               .threadFbId ?
               delta.deltaMessageReaction.threadKey.threadFbId : delta.deltaMessageReaction.threadKey
-                .otherUserFbId,
+                .otherUserFbId).toString(),
             messageID: delta.deltaMessageReaction.messageId,
             reaction: delta.deltaMessageReaction.reaction,
-            senderID: delta.deltaMessageReaction.senderId,
-            userID: delta.deltaMessageReaction.userId
+            senderID: delta.deltaMessageReaction.senderId.toString(),
+            userID: delta.deltaMessageReaction.userId.toString()
           });
         } else if (delta.deltaRecallMessageData && !!ctx.globalOptions.listenEvents) {
           globalCallback(null, {
             type: "message_unsend",
-            threadID: delta.deltaRecallMessageData.threadKey.threadFbId ?
+            threadID: (delta.deltaRecallMessageData.threadKey.threadFbId ?
               delta.deltaRecallMessageData.threadKey.threadFbId : delta.deltaRecallMessageData.threadKey
-                .otherUserFbId,
+                .otherUserFbId).toString(),
             messageID: delta.deltaRecallMessageData.messageID,
-            senderID: delta.deltaRecallMessageData.senderID,
+            senderID: delta.deltaRecallMessageData.senderID.toString(),
             deletionTimestamp: delta.deltaRecallMessageData.deletionTimestamp,
             timestamp: delta.deltaRecallMessageData.timestamp
           });
@@ -220,7 +226,7 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
           var mentions = {};
 
           for (var i = 0; i < m_id.length; i++) {
-            mentions[m_id[i]] = delta.deltaMessageReply.message.body.substring(
+            mentions[m_id[i]] = (delta.deltaMessageReply.message.body || "").substring(
               m_offset[i],
               m_offset[i] + m_length[i]
             );
@@ -228,16 +234,26 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
           //Mention block - 1#
           var callbackToReturn = {
             type: "message_reply",
-            threadID: delta.deltaMessageReply.message.messageMetadata.threadKey.threadFbId ?
+            threadID: (delta.deltaMessageReply.message.messageMetadata.threadKey.threadFbId ?
               delta.deltaMessageReply.message.messageMetadata.threadKey.threadFbId : delta.deltaMessageReply.message.messageMetadata.threadKey
-                .otherUserFbId,
+                .otherUserFbId).toString(),
             messageID: delta.deltaMessageReply.message.messageMetadata.messageId,
-            senderID: delta.deltaMessageReply.message.messageMetadata.actorFbId,
+            senderID: delta.deltaMessageReply.message.messageMetadata.actorFbId.toString(),
             attachments: delta.deltaMessageReply.message.attachments.map(function (att) {
               var mercury = JSON.parse(att.mercuryJSON);
               Object.assign(att, mercury);
               return att;
-            }).map(att => utils._formatAttachment(att)),
+            }).map(att => {
+              var x;
+              try {
+                x = utils._formatAttachment(att);
+              } catch (ex) {
+                x = att;
+                x.error = ex;
+                x.type = "unknown";
+              }
+              return x;
+            }),
             body: delta.deltaMessageReply.message.body || "",
             isGroup: !!delta.deltaMessageReply.message.messageMetadata.threadKey.threadFbId,
             mentions: mentions,
@@ -265,11 +281,11 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
             }
             //Mention block - 2#
             callbackToReturn.messageReply = {
-              threadID: delta.deltaMessageReply.repliedToMessage.messageMetadata.threadKey.threadFbId ?
+              threadID: (delta.deltaMessageReply.repliedToMessage.messageMetadata.threadKey.threadFbId ?
                 delta.deltaMessageReply.repliedToMessage.messageMetadata.threadKey.threadFbId : delta.deltaMessageReply.repliedToMessage.messageMetadata.threadKey
-                  .otherUserFbId,
+                  .otherUserFbId).toString(),
               messageID: delta.deltaMessageReply.repliedToMessage.messageMetadata.messageId,
-              senderID: delta.deltaMessageReply.repliedToMessage.messageMetadata.actorFbId,
+              senderID: delta.deltaMessageReply.repliedToMessage.messageMetadata.actorFbId.toString(),
               attachments: delta.deltaMessageReply.repliedToMessage.attachments.map(function (att) {
                 var mercury = JSON.parse(att.mercuryJSON);
                 Object.assign(att, mercury);
@@ -281,6 +297,7 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
                 } catch (ex) {
                   x = att;
                   x.error = ex;
+                  x.type = "unknown";
                 }
                 return x;
               }),
@@ -291,7 +308,7 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
             };
           }
 
-          if (!!ctx.globalOptions.autoMarkDelivery) {
+          if (ctx.globalOptions.autoMarkDelivery) {
             markDelivery(ctx, api, callbackToReturn.threadID, callbackToReturn.messageID);
           }
 
@@ -343,7 +360,6 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
             });
           }
           return globalCallback(null, fmtMsg);
-          break;
         default:
           return;
       }
@@ -358,6 +374,7 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
           "av": ctx.globalOptions.pageID,
           "queries": JSON.stringify({
             "o0": {
+              //This doc_id is valid as of ? (prob January 18, 2020)
               "doc_id": "1768656253222505",
               "query_params": {
                 "thread_and_message_id": {
@@ -436,7 +453,7 @@ function markDelivery(ctx, api, threadID, messageID) {
       if (err) {
         log.error(err);
       } else {
-        if (!!ctx.globalOptions.autoMarkRead) {
+        if (ctx.globalOptions.autoMarkRead) {
           api.markAsRead(threadID, (err) => {
             if (err) {
               log.error(err);
@@ -497,5 +514,5 @@ module.exports = function (defaultFuncs, api, ctx) {
     };
 
     return stopListening;
-  }
+  };
 };
