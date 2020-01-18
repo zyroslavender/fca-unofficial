@@ -160,7 +160,7 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
         return !ctx.globalOptions.selfListen &&
           fmtMsg.senderID === ctx.userID ?
           undefined :
-          globalCallback(null, fmtMsg);
+          (function () { globalCallback(null, fmtMsg); })();
       } else {
         if (
           v.delta.attachments[i].mercury.attach_type == "photo"
@@ -190,7 +190,7 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
       for (var i in clientPayload.deltas) {
         var delta = clientPayload.deltas[i];
         if (delta.deltaMessageReaction && !!ctx.globalOptions.listenEvents) {
-          globalCallback(null, {
+          (function () { globalCallback(null, {
             type: "message_reaction",
             threadID: (delta.deltaMessageReaction.threadKey
               .threadFbId ?
@@ -200,9 +200,9 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
             reaction: delta.deltaMessageReaction.reaction,
             senderID: delta.deltaMessageReaction.senderId.toString(),
             userID: delta.deltaMessageReaction.userId.toString()
-          });
+          }); })();
         } else if (delta.deltaRecallMessageData && !!ctx.globalOptions.listenEvents) {
-          globalCallback(null, {
+          (function () { globalCallback(null, {
             type: "message_unsend",
             threadID: (delta.deltaRecallMessageData.threadKey.threadFbId ?
               delta.deltaRecallMessageData.threadKey.threadFbId : delta.deltaRecallMessageData.threadKey
@@ -211,7 +211,7 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
             senderID: delta.deltaRecallMessageData.senderID.toString(),
             deletionTimestamp: delta.deltaRecallMessageData.deletionTimestamp,
             timestamp: delta.deltaRecallMessageData.timestamp
-          });
+          }); })();
         } else if (delta.deltaMessageReply) {
           //Mention block - #1
           var mdata =
@@ -315,7 +315,7 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
           return !ctx.globalOptions.selfListen &&
             callbackToReturn.senderID === ctx.userID ?
             undefined :
-            globalCallback(null, callbackToReturn);
+            (function () { globalCallback(null, callbackToReturn); })();
         }
       }
       return;
@@ -340,7 +340,7 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
           type: "parse_error"
         });
       }
-      return globalCallback(null, fmtMsg);
+      return (function () { globalCallback(null, fmtMsg); })();
     case "AdminTextMessage":
       switch (v.delta.type) {
         case "change_thread_theme":
@@ -359,7 +359,7 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
               type: "parse_error"
             });
           }
-          return globalCallback(null, fmtMsg);
+          return (function () { globalCallback(null, fmtMsg); })();
         default:
           return;
       }
@@ -405,7 +405,7 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
                 fetchData.message_sender.id.toString() === ctx.userID) ||
                 !ctx.loggedIn ?
                 undefined :
-                globalCallback(null, {
+                (function () { globalCallback(null, {
                   type: "change_thread_image",
                   threadID: utils.formatID(tid.toString()),
                   snippet: fetchData.snippet,
@@ -417,7 +417,7 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
                     height: fetchData.image_with_metadata.original_dimensions.y,
                     url: fetchData.image_with_metadata.preview.uri
                   }
-                });
+                }); })();
             }
           })
           .catch((err) => {
@@ -443,7 +443,7 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
         formattedEvent.author.toString() === ctx.userID) ||
         !ctx.loggedIn ?
         undefined :
-        globalCallback(null, formattedEvent);
+        (function () { globalCallback(null, formattedEvent); })();
   }
 }
 
