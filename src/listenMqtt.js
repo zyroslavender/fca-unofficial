@@ -4,25 +4,50 @@ var fbconnect = require("./mqtt/fbconnect");
 var utils = require("../utils");
 var log = require("npmlog");
 
-var identity = function () { };
+var identity = function () {};
+var mqttClient = undefined;
+
 var lastSeqId = 0;
-var client = undefined;
+var syncToken;
+
+//Don't really know what this does but I think it's for the active state
+var chatOn = true;
+var foreground = false;
+
+var topics = [
+  "/t_ms",
+  "/thread_typing",
+  "/orca_typing_notifications",
+  "/orca_presence",
+  "/legacy_web",
+  "/br_sr",
+  "/sr_res",
+  "/webrtc",
+  "/onevc",
+  "/notify_disconnect",
+  "/inbox",
+  "/mercury",
+  "/messaging_events",
+  "/orca_message_notifications",
+  "/pp",
+  "/webrtc_response",
+]
 
 function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
   var sessionID = Math.floor(Math.random() * 9007199254740991) + 1;
   var username = {
     u: ctx.userID,
     s: sessionID,
-    cp: 3,
-    ecp: 10,
-    chat_on: true,
-    fg: false,
+    chat_on: chatOn,
+    fg: foreground,
     d: utils.getGUID(),
     ct: "websocket",
-    mqtt_sid: "",
     //App id from facebook
     aid: "219994525426954",
-    st: [],
+    mqtt_sid: "",
+    cp: 3,
+    ecp: 10,
+    st: topics,
     pm: [],
     dc: "",
     no_auto_fg: true,
@@ -30,67 +55,70 @@ function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
   };
   var cookies = ctx.jar.getCookies("https://www.facebook.com").join("; ");
 
-  //Region could be changed for better ping. (Region atn: Southeast Asia, region ash: West US, prob)
-  //Region
-  var host = 'wss://edge-chat.facebook.com/chat?region=atn&sid=' + sessionID;
+  //Region could be changed for better ping. (Region atn: Southeast Asia, region ash: West US, prob) (Don't really know if we need it).
+  //// var host = 'wss://edge-chat.facebook.com/chat?region=atn&sid=' + sessionID;
+  var host = 'wss://edge-chat.facebook.com/chat?sid=' + sessionID;
 
   var options = {
     clientId: "mqttwsclient",
     protocolId: 'MQIsdp',
     protocolVersion: 3,
     username: JSON.stringify(username),
+    clean: true,
     wsOptions: {
       'headers': {
         'Cookie': cookies,
         'Origin': 'https://www.facebook.com',
         'User-Agent': ctx.globalOptions.userAgent,
         'Referer': 'https://www.facebook.com',
+        'Host': 'edge-chat.facebook.com'
       },
       origin: 'https://www.facebook.com',
       protocolVersion: 13
     }
   };
 
-  client = fbconnect.connect(host, options);
+  mqttClient = fbconnect.connect(host, options);
 
-  client.on('error', function (err) {
+  mqttClient.on('error', function(err) {
     log.error(err);
-    client.end();
+    mqttClient.end();
     globalCallback("Connection refused: Server unavailable", null);
   });
 
-  client.on('connect', function () {
-    var subscribelist = ["/t_ms"];
-    ctx.globalOptions.updatePresence ? subscribelist.push("/orca_presence") : "";
-    ctx.globalOptions.listenTyping ? subscribelist.push("/thread_typing", "/orca_typing_notifications") : "";
-    //client.subscribe(["/legacy_web", "/webrtc", "/br_sr", "/sr_res", "/thread_typing", "/orca_typing_notifications", "/notify_disconnect", "/orca_presence"],
-    client.subscribe(subscribelist,
-      (_err, _granted) => {
-        client.unsubscribe('/orca_message_notifications', (_err) => {
-          var queue = {
-            sync_api_version: 10,
-            max_deltas_able_to_process: 1000,
-            delta_batch_size: 500,
-            encoding: "JSON",
-            entity_fbid: ctx.userID,
-            initial_titan_sequence_id: lastSeqId,
-            device_params: null
-          };
+  mqttClient.on('connect', function() {
+    var topic;
+    var queue = {
+      sync_api_version: 10,
+      max_deltas_able_to_process: 1000,
+      delta_batch_size: 500,
+      encoding: "JSON",
+      entity_fbid: ctx.userID,
+    };
 
-          client.publish('/messenger_sync_create_queue', JSON.stringify(queue), { qos: 0, retain: false });
-        });
-      });
+    if(syncToken) {
+      topic = "/messenger_sync_get_diffs";
+      queue.last_seq_id = lastSeqId;
+      queue.sync_token = syncToken;
+    } else {
+      topic = "/messenger_sync_create_queue";
+      queue.initial_titan_sequence_id = lastSeqId;
+      queue.device_params = null;
+    }
+
+    mqttClient.publish(topic, JSON.stringify(queue), {qos: 1, retain: false})
   });
 
-  client.on('message', function (topic, message, _packet) {
+  mqttClient.on('message', function(topic, message, packet) {
     var jsonMessage = JSON.parse(message);
-    if (topic === "/t_ms") {
-      if (jsonMessage.lastIssuedSeqId) {
+    if(topic === "/t_ms") {
+      if(jsonMessage.firstDeltaSeqId && jsonMessage.syncToken) {
+        lastSeqId = jsonMessage.firstDeltaSeqId;
+        syncToken = jsonMessage.syncToken;
+      }
+
+      if(jsonMessage.lastIssuedSeqId) {
         lastSeqId = parseInt(jsonMessage.lastIssuedSeqId);
-      } else {
-        if (jsonMessage.deltas) {
-          lastSeqId = parseInt(jsonMessage.deltas[0].irisSeqId);
-        }
       }
 
       //If it contains more than 1 delta
@@ -126,7 +154,7 @@ function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
 
   });
 
-  client.on('close', function () {
+  mqttClient.on('close', function() {
     // client.end();
   });
 }
@@ -469,6 +497,8 @@ module.exports = function (defaultFuncs, api, ctx) {
   var globalCallback = identity;
   return function (callback) {
     globalCallback = callback;
+
+    //Same request as getThreadList
     const form = {
       "av": ctx.globalOptions.pageID,
       "queries": JSON.stringify({
@@ -510,7 +540,7 @@ module.exports = function (defaultFuncs, api, ctx) {
 
     var stopListening = function () {
       globalCallback = identity;
-      client.end();
+      mqttClient.end();
     };
 
     return stopListening;

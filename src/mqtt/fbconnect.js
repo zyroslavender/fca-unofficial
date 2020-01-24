@@ -62,10 +62,10 @@ function connect(brokerUrl, opts) {
     opts.clientId = opts.query.clientId;
   }
 
-  if (opts.cert && opts.key) {
-    if (opts.protocol) {
-      if (['mqtts', 'wss'].indexOf(opts.protocol) === -1) {
-        switch (opts.protocol) {
+  if(opts.cert && opts.key) {
+    if(opts.protocol) {
+      if(['mqtts', 'wss'].indexOf(opts.protocol) === -1) {
+        switch(opts.protocol) {
           case 'mqtt':
             opts.protocol = 'mqtts';
             break;
@@ -89,8 +89,8 @@ function connect(brokerUrl, opts) {
       'mqtts',
       'ws',
       'wss'
-    ].filter(function (key, index) {
-      if (isSecure && index % 2 === 0) {
+    ].filter(function(key, index) {
+      if(isSecure && index % 2 === 0) {
         // Skip insecure protocols when requesting a secure one.
         return false;
       }
