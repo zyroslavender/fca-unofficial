@@ -1641,6 +1641,7 @@ __Arguments__
     - `userAgent`: (Default `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/600.3.18 (KHTML, like Gecko) Version/8.0.3 Safari/600.3.18`) The desired simulated User Agent.
 	- `autoMarkDelivery`: (Default `true`) Will automatically mark new messages as delivered. See [api.markAsDelivered](#markAsDelivered).
 	- `autoMarkRead`: (Default `false`) Will automatically mark new messages as read/seen. See [api.markAsRead](#markAsRead).
+	- `proxy`: (Default empty) Set this to proxy server address to use proxy. Note: Only HTTP Proxies which support CONNECT method is supported.
 
 __Example__
 
