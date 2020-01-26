@@ -1634,7 +1634,6 @@ __Arguments__
       caution, as it can result in loops (a simple echo bot will send messages
       forever).
     - `listenEvents`: (Default `false`) Will make [api.listen](#listen) also handle events (look at api.listen for more details).
-	- `listenEvents`: (Default `false`) Will make [api.listen](#listen) also handle typing events (look at api.listen for more details).
     - `pageID`: (Default empty) Makes [api.listen](#listen) only receive messages through the page specified by that ID. Also makes [api.sendMessage](#sendMessage) send from the page.
     - `updatePresence`: (Default `false`) Will make [api.listen](#listen) also return `presence` ([api.listen](#presence) for more details).
     - `forceLogin`: (Default `false`) Will automatically approve of any recent logins and continue with the login process.
