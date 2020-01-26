@@ -194,6 +194,7 @@ function presenceEncode(str) {
     });
 }
 
+// eslint-disable-next-line no-unused-vars
 function presenceDecode(str) {
   return decodeURIComponent(
     str.replace(/[_A-Z]/g, function(m) {

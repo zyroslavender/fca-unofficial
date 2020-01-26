@@ -3,6 +3,7 @@
 var fbconnect = require("./mqtt/fbconnect");
 var utils = require("../utils");
 var log = require("npmlog");
+var HttpsProxyAgent = require('https-proxy-agent');
 
 var identity = function () {};
 var mqttClient = undefined;
@@ -31,7 +32,7 @@ var topics = [
   "/orca_message_notifications",
   "/pp",
   "/webrtc_response",
-]
+];
 
 function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
   var sessionID = Math.floor(Math.random() * 9007199254740991) + 1;
@@ -78,6 +79,11 @@ function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
     }
   };
 
+  if (typeof ctx.globalOptions.proxy != "undefined") {
+    var agent = new HttpsProxyAgent(ctx.globalOptions.proxy); 
+    options.wsOptions.agent = agent;
+  }
+
   mqttClient = fbconnect.connect(host, options);
 
   mqttClient.on('error', function(err) {
@@ -106,10 +112,10 @@ function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
       queue.device_params = null;
     }
 
-    mqttClient.publish(topic, JSON.stringify(queue), {qos: 1, retain: false})
+    mqttClient.publish(topic, JSON.stringify(queue), {qos: 1, retain: false});
   });
 
-  mqttClient.on('message', function(topic, message, packet) {
+  mqttClient.on('message', function(topic, message, _packet) {
     var jsonMessage = JSON.parse(message);
     if(topic === "/t_ms") {
       if(jsonMessage.firstDeltaSeqId && jsonMessage.syncToken) {
