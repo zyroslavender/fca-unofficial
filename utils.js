@@ -5,6 +5,17 @@ var request = bluebird.promisify(require("request").defaults({ jar: true }));
 var stream = require("stream");
 var log = require("npmlog");
 
+function setProxy(url) {
+  if (typeof url == undefined) 
+    return request = bluebird.promisify(require("request").defaults({ 
+      jar: true, 
+    }));
+  return request = bluebird.promisify(require("request").defaults({ 
+    jar: true, 
+    proxy: url
+  }));
+}
+
 function getHeaders(url, options) {
   var headers = {
     "Content-Type": "application/x-www-form-urlencoded",
@@ -1276,6 +1287,7 @@ module.exports = {
   formatDate,
   decodeClientPayload,
   getAppState,
-  getAdminTextMessageType
+  getAdminTextMessageType,
+  setProxy
 };
 

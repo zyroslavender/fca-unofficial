@@ -45,6 +45,15 @@ function setOptions(globalOptions, options) {
       case 'listenTyping':
         globalOptions.listenTyping = options.listenTyping;
         break;
+      case 'proxy':
+        if (typeof options.proxy == "undefined") {
+          delete globalOptions.proxy;
+          utils.setProxy();
+        } else {
+          globalOptions.proxy = options.proxy;
+          utils.setProxy(globalOptions.proxy);
+        }
+        break;
       default:
         log.warn("setOptions", "Unrecognized option given to setOptions: " + key);
         break;
