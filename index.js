@@ -428,18 +428,6 @@ function loginHelper(appState, email, password, globalOptions, callback) {
       return utils
         .get("https://0-edge-chat.facebook.com/pull", ctx.jar, form, globalOptions)
         .then(utils.saveCookies(ctx.jar));
-    })
-    .then(function() {
-      var form = {
-        'client' : 'mercury',
-        'folders[0]': 'inbox',
-        'last_action_timestamp' : '0'
-      };
-      log.info("login", "Request to thread_sync");
-
-      return defaultFuncs
-        .post("https://www.facebook.com/ajax/mercury/thread_sync.php", ctx.jar, form, globalOptions)
-        .then(utils.saveCookies(ctx.jar));
     });
 
   // given a pageID we log in as a page
