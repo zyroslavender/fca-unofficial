@@ -963,7 +963,7 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
 <a name="threadColors"></a>
 ### api.threadColors
 
-A dictionary mapping names of all currently valid thread themes to their theme ID that are accepted by [`api.changeThreadColor`](#changeThreadColor). These colors, listed below, are the ones present in the palette UI used for selecting thread colors on the Messenger client.
+A dictionary mapping names of all currently valid thread themes to their theme ID that are accepted by [`api.changeThreadColor`](#changeThreadColor). These themes, listed below, are the ones present in the palette UI used for selecting thread themes on the Messenger client.
 
 - DefaultBlue: `196241301102133`
 - HotPink: `169463077092846`
