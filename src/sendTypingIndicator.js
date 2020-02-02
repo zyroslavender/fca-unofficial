@@ -3,8 +3,8 @@
 var utils = require("../utils");
 var log = require("npmlog");
 
-module.exports = function(defaultFuncs, api, ctx) {
-  function makeTypingIndicator(typ, threadID, callback) {
+module.exports = function (defaultFuncs, api, ctx) {
+  function makeTypingIndicator(typ, threadID, callback, isGroup) {
     var form = {
       typ: +typ,
       to: "",
@@ -14,34 +14,54 @@ module.exports = function(defaultFuncs, api, ctx) {
 
     // Check if thread is a single person chat or a group chat
     // More info on this is in api.sendMessage
-    api.getUserInfo(threadID, function(err, res) {
-      if (err) {
-        return callback(err);
-      }
-
-      // If id is single person chat
-      if (Object.keys(res).length > 0) {
+    if (utils.getType(isGroup) == "Boolean") {
+      if (!isGroup) {
         form.to = threadID;
       }
-
       defaultFuncs
         .post("https://www.facebook.com/ajax/messaging/typ.php", ctx.jar, form)
         .then(utils.parseAndCheckLogin(ctx, defaultFuncs))
-        .then(function(resData) {
+        .then(function (resData) {
           if (resData.error) {
             throw resData;
           }
 
           return callback();
         })
-        .catch(function(err) {
+        .catch(function (err) {
           log.error("sendTypingIndicator", err);
           return callback(err);
         });
-    });
+    } else {
+      api.getUserInfo(threadID, function (err, res) {
+        if (err) {
+          return callback(err);
+        }
+
+        // If id is single person chat
+        if (Object.keys(res).length > 0) {
+          form.to = threadID;
+        }
+
+        defaultFuncs
+          .post("https://www.facebook.com/ajax/messaging/typ.php", ctx.jar, form)
+          .then(utils.parseAndCheckLogin(ctx, defaultFuncs))
+          .then(function (resData) {
+            if (resData.error) {
+              throw resData;
+            }
+
+            return callback();
+          })
+          .catch(function (err) {
+            log.error("sendTypingIndicator", err);
+            return callback(err);
+          });
+      });
+    }
   }
 
-  return function sendTypingIndicator(threadID, callback) {
+  return function sendTypingIndicator(threadID, callback, isGroup) {
     if (
       utils.getType(callback) !== "Function" &&
       utils.getType(callback) !== "AsyncFunction"
@@ -52,10 +72,10 @@ module.exports = function(defaultFuncs, api, ctx) {
           "callback is not a function - ignoring."
         );
       }
-      callback = () => {};
+      callback = () => { };
     }
 
-    makeTypingIndicator(true, threadID, callback);
+    makeTypingIndicator(true, threadID, callback, isGroup);
 
     return function end(cb) {
       if (
@@ -68,10 +88,10 @@ module.exports = function(defaultFuncs, api, ctx) {
             "callback is not a function - ignoring."
           );
         }
-        cb = () => {};
+        cb = () => { };
       }
 
-      makeTypingIndicator(false, threadID, cb);
+      makeTypingIndicator(false, threadID, cb, isGroup);
     };
   };
 };
