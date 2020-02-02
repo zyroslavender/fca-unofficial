@@ -179,7 +179,7 @@ module.exports = function(defaultFuncs, api, ctx) {
     if (utils.getType(threadID) === "Array") {
       sendContent(form, threadID, false, messageAndOTID, callback);
     } else {
-      if (isGroup == null || utils.getType(isGroup) != "Boolean") {
+      if (utils.getType(isGroup) != "Boolean") {
         api.getUserInfo(threadID, function(err, res) {
           if (err) {
             return callback(err);
@@ -193,7 +193,7 @@ module.exports = function(defaultFuncs, api, ctx) {
           );
         });
       } else {
-        sendContent(form, threadID, isGroup, messageAndOTID, callback);
+        sendContent(form, threadID, !isGroup, messageAndOTID, callback);
       }
     }
   }
