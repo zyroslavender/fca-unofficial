@@ -172,25 +172,29 @@ module.exports = function(defaultFuncs, api, ctx) {
       });
   }
 
-  function send(form, threadID, messageAndOTID, callback) {
+  function send(form, threadID, messageAndOTID, callback, isGroup) {
     // We're doing a query to this to check if the given id is the id of
     // a user or of a group chat. The form will be different depending
     // on that.
     if (utils.getType(threadID) === "Array") {
       sendContent(form, threadID, false, messageAndOTID, callback);
     } else {
-      api.getUserInfo(threadID, function(err, res) {
-        if (err) {
-          return callback(err);
-        }
-        sendContent(
-          form,
-          threadID,
-          Object.keys(res).length > 0,
-          messageAndOTID,
-          callback
-        );
-      });
+      if (isGroup == null || utils.getType(isGroup) != "Boolean") {
+        api.getUserInfo(threadID, function(err, res) {
+          if (err) {
+            return callback(err);
+          }
+          sendContent(
+            form,
+            threadID,
+            Object.keys(res).length > 0,
+            messageAndOTID,
+            callback
+          );
+        });
+      } else {
+        sendContent(form, threadID, isGroup, messageAndOTID, callback);
+      }
     }
   }
 
@@ -303,7 +307,8 @@ module.exports = function(defaultFuncs, api, ctx) {
     cb();
   }
 
-  return function sendMessage(msg, threadID, callback, replyToMessage) {
+  return function sendMessage(msg, threadID, callback, replyToMessage, isGroup) {
+    typeof isGroup == "undefined" ? isGroup = null : "";
     if (
       !callback &&
       (utils.getType(threadID) === "Function" ||
@@ -410,7 +415,7 @@ module.exports = function(defaultFuncs, api, ctx) {
         handleUrl(msg, form, callback, () =>
           handleEmoji(msg, form, callback, () =>
             handleMention(msg, form, callback, () =>
-              send(form, threadID, messageAndOTID, callback)
+              send(form, threadID, messageAndOTID, callback, isGroup)
             )
           )
         )
