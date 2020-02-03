@@ -5,16 +5,6 @@ var utils = require("../utils");
 var log = require("npmlog");
 var HttpsProxyAgent = require('https-proxy-agent');
 
-var identity = function () {};
-var mqttClient = undefined;
-
-var lastSeqId = 0;
-var syncToken;
-
-//Don't really know what this does but I think it's for the active state
-var chatOn = true;
-var foreground = false;
-
 var topics = [
   "/t_ms",
   "/thread_typing",
@@ -35,6 +25,16 @@ var topics = [
 ];
 
 function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
+  //Don't really know what this does but I think it's for the active state
+  var chatOn = true;
+  var foreground = false;
+  
+  var identity = function () {};
+  var mqttClient = undefined;
+
+  var lastSeqId = 0;
+  var syncToken;
+  
   var sessionID = Math.floor(Math.random() * 9007199254740991) + 1;
   var username = {
     u: ctx.userID,
