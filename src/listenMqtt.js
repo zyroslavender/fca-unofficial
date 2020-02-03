@@ -119,7 +119,7 @@ function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
     try {
       var jsonMessage = JSON.parse(message);
     } catch (ex) {
-      log.error("listenMqtt", ex); 
+      return log.error("listenMqtt", ex); 
     }
     if(topic === "/t_ms") {
       if(jsonMessage.firstDeltaSeqId && jsonMessage.syncToken) {
