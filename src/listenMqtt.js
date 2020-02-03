@@ -116,7 +116,11 @@ function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
   });
 
   mqttClient.on('message', function(topic, message, _packet) {
-    var jsonMessage = JSON.parse(message);
+    try {
+      var jsonMessage = JSON.parse(message);
+    } catch (ex) {
+      log.error("listenMqtt", ex); 
+    }
     if(topic === "/t_ms") {
       if(jsonMessage.firstDeltaSeqId && jsonMessage.syncToken) {
         lastSeqId = jsonMessage.firstDeltaSeqId;
@@ -439,7 +443,7 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
                 fetchData.message_sender.id.toString() === ctx.userID) ||
                 !ctx.loggedIn ?
                 undefined :
-                (function () { globalCallback(null, {
+                (function () { log.info("forcedFetch", fetchData); globalCallback(null, {
                   type: "change_thread_image",
                   threadID: utils.formatID(tid.toString()),
                   snippet: fetchData.snippet,
