@@ -11,7 +11,7 @@ var mqttClient = undefined;
 var lastSeqId = 0;
 var syncToken;
 
-//Don't really know what this does but I think it's for the active state
+//Don't really know what this does but I think it's for the active state?
 var chatOn = true;
 var foreground = false;
 
