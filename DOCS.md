@@ -999,7 +999,7 @@ __Arguments__
 ---------------------------------------
 
 <a name="listen"></a>
-### api.listen(callback)
+### api.listen(callback) (deprecated, use `api.listenMqtt` instead)
 
 Will call `callback` when a new message is received on this account.
 By default this won't receive events (joining/leaving a chat, title change etc...) but it can be activated with `api.setOptions({listenEvents: true})`.  This will by default ignore messages sent by the current account, you can enable listening to your own messages with `api.setOptions({selfListen: true})`. This returns `stopListening` that will stop the `listen` loop and is guaranteed to prevent any future calls to the callback given to `listen`. An immediate call to `stopListening` when an error occurs will prevent the listen function to continue.
@@ -1643,6 +1643,7 @@ __Arguments__
 	- `autoMarkDelivery`: (Default `true`) Will automatically mark new messages as delivered. See [api.markAsDelivered](#markAsDelivered).
 	- `autoMarkRead`: (Default `false`) Will automatically mark new messages as read/seen. See [api.markAsRead](#markAsRead).
 	- `proxy`: (Default empty) Set this to proxy server address to use proxy. Note: Only HTTP Proxies which support CONNECT method is supported.
+	- `online`: (Default `true`) Set account's online state.
 
 __Example__
 
