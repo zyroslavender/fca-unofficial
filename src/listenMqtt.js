@@ -534,8 +534,10 @@ module.exports = function (defaultFuncs, api, ctx) {
             res: resData,
             error: "Returned response is not an array."
           }
-        } else {
-          log.info("getSeqId", resData);
+        } else if (!resData.length) {
+          throw {
+            error: "Not logged in" 
+          }
         }
       
         if (resData && resData[resData.length - 1].error_results > 0) {
