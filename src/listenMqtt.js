@@ -529,6 +529,15 @@ module.exports = function (defaultFuncs, api, ctx) {
       .post("https://www.facebook.com/api/graphqlbatch/", ctx.jar, form)
       .then(utils.parseAndCheckLogin(ctx, defaultFuncs))
       .then((resData) => {
+        if (utils.getType(resData) != "Object") {
+          throw {
+            res: resData,
+            error: "Returned response is not an object."
+          }
+        } else {
+          log.info("getSeqId", resData);
+        }
+      
         if (resData && resData[resData.length - 1].error_results > 0) {
           throw resData[0].o0.errors;
         }
