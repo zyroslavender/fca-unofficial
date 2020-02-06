@@ -529,10 +529,10 @@ module.exports = function (defaultFuncs, api, ctx) {
       .post("https://www.facebook.com/api/graphqlbatch/", ctx.jar, form)
       .then(utils.parseAndCheckLogin(ctx, defaultFuncs))
       .then((resData) => {
-        if (utils.getType(resData) != "Object") {
+        if (utils.getType(resData) != "Array") {
           throw {
             res: resData,
-            error: "Returned response is not an object."
+            error: "Returned response is not an array."
           }
         } else {
           log.info("getSeqId", resData);
