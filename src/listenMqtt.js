@@ -16,16 +16,21 @@ var chatOn = true;
 var foreground = false;
 
 var topics = [
+  "/legacy_web",
+  "/webrtc",
+  "/rtc_multi",
+  "/onevc",
+  "/br_sr", //Notification
+  //Need to publish /br_sr right after this
+  "/sr_res",
   "/t_ms",
   "/thread_typing",
   "/orca_typing_notifications",
-  "/orca_presence",
-  "/legacy_web",
-  "/br_sr",
-  "/sr_res",
-  "/webrtc",
-  "/onevc",
   "/notify_disconnect",
+  //Need to publish /messenger_sync_create_queue right after this
+  "/orca_presence",
+  //Will receive /sr_res right here.
+
   "/inbox",
   "/mercury",
   "/messaging_events",
@@ -531,13 +536,9 @@ module.exports = function (defaultFuncs, api, ctx) {
       .then((resData) => {
         if (utils.getType(resData) != "Array") {
           throw {
-            res: resData,
-            error: "Returned response is not an array."
-          }
-        } else if (!resData.length) {
-          throw {
-            error: "Not logged in" 
-          }
+            error: "Not logged in",
+            res: resData
+          };
         }
       
         if (resData && resData[resData.length - 1].error_results > 0) {
@@ -559,9 +560,13 @@ module.exports = function (defaultFuncs, api, ctx) {
         return callback(err);
       });
 
-    var stopListening = function () {
+    var stopListening = function (callback) {
       globalCallback = identity;
-      mqttClient.end();
+      mqttClient.unsubscribe("/webrtc");
+      mqttClient.unsubscribe("/rtc_multi", "{}");
+      mqttClient.unsubscribe("/onevc", "{}");
+      mqttClient.publish("/browser_close", "{}");
+      mqttClient.end(true, callback);
     };
 
     return stopListening;
