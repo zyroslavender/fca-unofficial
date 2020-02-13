@@ -434,6 +434,10 @@ function loginHelper(appState, email, password, globalOptions, callback) {
             .then(utils.saveCookies(ctx.jar))
             .then(function () { 
               done = true;
+            })
+            .catch(function (ex) {
+              log.error("login", ex);
+              done = true;
             });
           deasync.loopWhile(function () {
             return !done;
