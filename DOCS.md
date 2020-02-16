@@ -75,15 +75,19 @@ nodejs login.js
 ---------------------------------------
 
 <a name="login"></a>
-### login(credentials[, options], callback)
+### login(credentials[, options][, callback])
 
 This function is returned by `require(...)` and is the main entry point to the API.
 
 It allows the user to log into facebook given the right credentials.
 
-If it succeeds, `callback` will be called with a `null` object (for potential errors) and with an object containing all the available functions.
+Return a Promise that will resolve if logged in successfully, or reject if failed to login. (will not resolve or reject if callback is supplied!)
 
-If it fails, `callback` will be called with an error object.
+If `callback` is supplied:
+
+* `callback` will be called with a `null` object (for potential errors) and with an object containing all the available functions if logged in successfully.
+
+* `callback` will be called with an error object if failed to login.
 
 __Arguments__
 
