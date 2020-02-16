@@ -12,7 +12,7 @@ function setOptions(globalOptions, options) {
   Object.keys(options).map(function(key) {
     switch (key) {
       case 'online':
-        globalOptions.online = Boolean(options.online);
+        globalOptions.online = options.online;
         break;
       case 'logLevel':
         log.level = options.logLevel;
@@ -45,18 +45,6 @@ function setOptions(globalOptions, options) {
         break;
       case 'autoMarkRead':
         globalOptions.autoMarkRead = options.autoMarkRead;
-        break;
-      case 'listenTyping':
-        globalOptions.listenTyping = options.listenTyping;
-        break;
-      case 'proxy':
-        if (typeof options.proxy == "undefined") {
-          delete globalOptions.proxy;
-          utils.setProxy();
-        } else {
-          globalOptions.proxy = options.proxy;
-          utils.setProxy(globalOptions.proxy);
-        }
         break;
       default:
         log.warn("setOptions", "Unrecognized option given to setOptions: " + key);
@@ -106,7 +94,6 @@ function buildAPI(globalOptions, html, jar) {
     'changeNickname',
     'changeThreadColor',
     'changeThreadEmoji',
-    'createNewGroup',
     'createPoll',
     'deleteMessage',
     'deleteThread',
@@ -376,7 +363,7 @@ function loginHelper(appState, email, password, globalOptions, callback) {
         .then(utils.saveCookies(ctx.jar));
     })
     .then(function(_res) {
-      log.info("login", 'Request to base pull');
+      log.info("login", 'Request to pull 1');
       var form = {
         channel : 'p_' + ctx.userID,
         seq : 0,
@@ -391,9 +378,11 @@ function loginHelper(appState, email, password, globalOptions, callback) {
       };
       var presence = utils.generatePresence(ctx.userID);
       ctx.jar.setCookie("presence=" + presence + "; path=/; domain=.facebook.com; secure", "https://www.facebook.com");
+      ctx.jar.setCookie("presence=" + presence + "; path=/; domain=.messenger.com; secure", "https://www.messenger.com");
       ctx.jar.setCookie("locale=en_US; path=/; domain=.facebook.com; secure", "https://www.facebook.com");
+      ctx.jar.setCookie("locale=en_US; path=/; domain=.messenger.com; secure", "https://www.messenger.com");
       ctx.jar.setCookie("a11y=" + utils.generateAccessiblityCookie() + "; path=/; domain=.facebook.com; secure", "https://www.facebook.com");
-      
+
       return utils
         .get("https://0-edge-chat.facebook.com/pull", ctx.jar, form, globalOptions)
         .then(utils.saveCookies(ctx.jar))
@@ -404,6 +393,7 @@ function loginHelper(appState, email, password, globalOptions, callback) {
           } catch(e) {
             throw {error: "Error inside first pull request. Received HTML instead of JSON. Logging in inside a browser might help fix this."};
           }
+
           return ret;
         });
     })
@@ -433,10 +423,6 @@ function loginHelper(appState, email, password, globalOptions, callback) {
           utils.get("https://0-edge-chat.facebook.com/pull", ctx.jar, form, globalOptions)
             .then(utils.saveCookies(ctx.jar))
             .then(function () { 
-              done = true;
-            })
-            .catch(function (ex) {
-              log.error("login", ex);
               done = true;
             });
           deasync.loopWhile(function () {
@@ -502,19 +488,33 @@ function login(loginData, options, callback) {
   var globalOptions = {
     selfListen: false,
     listenEvents: false,
-    listenTyping: false,
     updatePresence: false,
     forceLogin: false,
     autoMarkDelivery: true,
     autoMarkRead: false,
     logRecordSize: defaultLogRecordSize,
-    online: true,
-    userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/600.3.18 (KHTML, like Gecko) Version/8.0.3 Safari/600.3.18"
+    userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/600.3.18 (KHTML, like Gecko) Version/8.0.3 Safari/600.3.18",
+    online: true
   };
 
   setOptions(globalOptions, options);
 
+  if (utils.getType(callback) != "Function" || utils.getType(callback) != "AsyncFunction") {
+    var rejectFunc = null;
+    var resolveFunc = null;
+    var returnPromise = new Promise(function (resolve, reject) {
+      resolveFunc = resolve;
+      rejectFunc = reject;
+    });
+    callback = function (error, api) {
+      if (error) {
+        return rejectFunc(error);
+      }
+      return resolveFunc(api);
+    };
+  }
   loginHelper(loginData.appState, loginData.email, loginData.password, globalOptions, callback);
+  return returnPromise;
 }
 
 module.exports = login;
