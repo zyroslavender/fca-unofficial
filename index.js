@@ -154,7 +154,7 @@ function buildAPI(globalOptions, html, jar) {
   return [ctx, defaultFuncs, api];
 }
 
-function makeLogin(jar, email, password, loginOptions, callback) {
+function makeLogin(jar, email, password, loginOptions, callback, prCallback) {
   return function(res) {
     var html = res.body;
     var $ = cheerio.load(html);
@@ -235,7 +235,13 @@ function makeLogin(jar, email, password, loginOptions, callback) {
                   continue: function(code) {
                     form.approvals_code = code;
                     form['submit[Continue]'] = 'Continue';
-                    return utils
+                    var prResolve = null;
+                    var prReject = null;
+                    var rtPromise = new Promise(function (resolve, reject) {
+                      prResolve = resolve;
+                      prReject = reject;
+                    });
+                    utils
                       .post(nextURL, jar, form, loginOptions)
                       .then(utils.saveCookies(jar))
                       .then(function() {
@@ -254,13 +260,24 @@ function makeLogin(jar, email, password, loginOptions, callback) {
 
                         var appState = utils.getAppState(jar);
 
+                        // Check if using Promise instead of callback
+                        if (callback === prCallback) {
+                          callback = function (err, api) {
+                            if (err) {
+                              return prReject(err);
+                            }
+                            return prResolve(api);
+                          };
+                        }
+
                         // Simply call loginHelper because all it needs is the jar
                         // and will then complete the login process
                         return loginHelper(appState, email, password, loginOptions, callback);
                       })
                       .catch(function(err) {
-                        callback(err);
+                        prReject(err);
                       });
+                    return rtPromise;
                   }
                 };
               } else {
@@ -514,6 +531,7 @@ function login(loginData, options, callback) {
 
   setOptions(globalOptions, options);
 
+  var prCallback = null;
   if (utils.getType(callback) != "Function" || utils.getType(callback) != "AsyncFunction") {
     var rejectFunc = null;
     var resolveFunc = null;
@@ -521,14 +539,15 @@ function login(loginData, options, callback) {
       resolveFunc = resolve;
       rejectFunc = reject;
     });
-    callback = function (error, api) {
+    prCallback = function (error, api) {
       if (error) {
         return rejectFunc(error);
       }
       return resolveFunc(api);
     };
+    callback = prCallback;
   }
-  loginHelper(loginData.appState, loginData.email, loginData.password, globalOptions, callback);
+  loginHelper(loginData.appState, loginData.email, loginData.password, globalOptions, callback, prCallback);
   return returnPromise;
 }
 
