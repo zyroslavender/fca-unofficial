@@ -5,7 +5,20 @@ var log = require("npmlog");
 
 module.exports = function(defaultFuncs, api, ctx) {
   return function changeNickname(nickname, threadID, participantID, callback) {
-    callback = callback || function() {};
+    var resolveFunc = function(){};
+    var rejectFunc = function(){};
+    var returnPromise = new Promise(function (resolve, reject) {
+      resolveFunc = resolve;
+      rejectFunc = reject;
+    });
+    if (!callback) {
+      callback = function (err) {
+        if (err) {
+          return rejectFunc(err);
+        }
+        resolveFunc();
+      };
+    }
 
     var form = {
       nickname: nickname,
@@ -40,5 +53,7 @@ module.exports = function(defaultFuncs, api, ctx) {
         log.error("changeNickname", err);
         return callback(err);
       });
+
+    return returnPromise;
   };
 };

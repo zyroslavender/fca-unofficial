@@ -5,10 +5,6 @@ var log = require("npmlog");
 
 module.exports = function(defaultFuncs, api, ctx) {
   return function createNewGroup(participantIDs, groupTitle, callback) {
-    if (!callback && !groupTitle) {
-      throw { error: "createNewGroup: need callback" };
-    }
-
     if (utils.getType(groupTitle) == "Function") {
       callback = groupTitle;
       groupTitle = null;
@@ -20,6 +16,22 @@ module.exports = function(defaultFuncs, api, ctx) {
 
     if (participantIDs.length < 2) {
       throw { error: "createNewGroup: participantIDs should have at least 2 IDs." };
+    }
+
+    var resolveFunc = function(){};
+    var rejectFunc = function(){};
+    var returnPromise = new Promise(function (resolve, reject) {
+      resolveFunc = resolve;
+      rejectFunc = reject;
+    });
+
+    if (!callback) {
+      callback = function (err, threadID) {
+        if (err) {
+          return rejectFunc(err);
+        }
+        resolveFunc(threadID);
+      };
     }
 
     var pids = [];
@@ -68,5 +80,7 @@ module.exports = function(defaultFuncs, api, ctx) {
         log.error("createNewGroup", err);
         return callback(err);
       });
+
+    return returnPromise;
   };
 };

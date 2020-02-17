@@ -168,8 +168,21 @@ module.exports = function(defaultFuncs, api, ctx) {
     if (utils.getType(tags) !== "Array") {
       throw {error: "getThreadList: tags must be an array"};
     }
+
+    var resolveFunc = function(){};
+    var rejectFunc = function(){};
+    var returnPromise = new Promise(function (resolve, reject) {
+      resolveFunc = resolve;
+      rejectFunc = reject;
+    });
+
     if (utils.getType(callback) !== "Function" && utils.getType(callback) !== "AsyncFunction") {
-      throw {error: "getThreadList: need callback"};
+      callback = function (err, data) {
+        if (err) {
+          return rejectFunc(err);
+        }
+        resolveFunc(data);
+      };
     }
 
     const form = {
@@ -216,5 +229,7 @@ module.exports = function(defaultFuncs, api, ctx) {
         log.error("getThreadList", err);
         return callback(err);
       });
+
+    return returnPromise;
   };
 };

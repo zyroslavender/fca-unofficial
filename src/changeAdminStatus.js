@@ -21,8 +21,20 @@ module.exports = function(defaultFuncs, api, ctx) {
       throw {error: "changeAdminStatus: adminStatus must be a string"};
     }
 
+    var resolveFunc = function(){};
+    var rejectFunc = function(){};
+    var returnPromise = new Promise(function (resolve, reject) {
+      resolveFunc = resolve;
+      rejectFunc = reject;
+    });
+
     if (!callback) {
-      callback = () => {};
+      callback = function (err) {
+        if (err) {
+          return rejectFunc(err);
+        }
+        resolveFunc();
+      };
     }
 
     if (utils.getType(callback) !== "Function" && utils.getType(callback) !== "AsyncFunction") {
@@ -35,7 +47,7 @@ module.exports = function(defaultFuncs, api, ctx) {
 
     let i = 0;
     for (let u of adminIDs) {
-      form[`admin_ids[${i++}]`] = u
+      form[`admin_ids[${i++}]`] = u;
     }
     form["add"] = adminStatus;
 
@@ -60,6 +72,8 @@ module.exports = function(defaultFuncs, api, ctx) {
         log.error("changeAdminStatus", err);
         return callback(err);
       });
+      
+    return returnPromise;
   };
 };
 

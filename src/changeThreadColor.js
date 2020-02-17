@@ -5,8 +5,20 @@ var log = require("npmlog");
 
 module.exports = function(defaultFuncs, api, ctx) {
   return function changeThreadColor(color, threadID, callback) {
+    var resolveFunc = function(){};
+    var rejectFunc = function(){};
+    var returnPromise = new Promise(function (resolve, reject) {
+      resolveFunc = resolve;
+      rejectFunc = reject;
+    });
+
     if (!callback) {
-      callback = function() {};
+      callback = function(err) {
+        if (err) {
+          return rejectFunc(err);
+        }
+        resolveFunc(err);
+      };
     }
 
     var validatedColor = color !== null ? color.toLowerCase() : color; // API only accepts lowercase letters in hex string
@@ -53,5 +65,7 @@ module.exports = function(defaultFuncs, api, ctx) {
         log.error("changeThreadColor", err);
         return callback(err);
       });
+
+    return returnPromise;
   };
 };

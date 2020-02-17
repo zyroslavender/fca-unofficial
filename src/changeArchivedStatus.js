@@ -5,8 +5,20 @@ var log = require("npmlog");
 
 module.exports = function(defaultFuncs, api, ctx) {
   return function changeArchivedStatus(threadOrThreads, archive, callback) {
+    var resolveFunc = function(){};
+    var rejectFunc = function(){};
+    var returnPromise = new Promise(function (resolve, reject) {
+      resolveFunc = resolve;
+      rejectFunc = reject;
+    });
+
     if (!callback) {
-      callback = function() {};
+      callback = function(err) {
+        if (err) {
+          return rejectFunc(err);
+        }
+        resolveFunc();
+      };
     }
 
     var form = {};
@@ -37,5 +49,7 @@ module.exports = function(defaultFuncs, api, ctx) {
         log.error("changeArchivedStatus", err);
         return callback(err);
       });
+      
+    return returnPromise;
   };
 };

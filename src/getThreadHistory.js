@@ -103,7 +103,6 @@ function formatAttachmentsGraphQLResponse(attachment) {
         duration: attachment.playable_duration_in_ms,
         videoType: attachment.video_type.toLowerCase()
       };
-      break;
     case "MessageFile":
       return {
         type: "file",
@@ -585,8 +584,20 @@ module.exports = function(defaultFuncs, api, ctx) {
     timestamp,
     callback
   ) {
+    var resolveFunc = function(){};
+    var rejectFunc = function(){};
+    var returnPromise = new Promise(function (resolve, reject) {
+      resolveFunc = resolve;
+      rejectFunc = reject;
+    });
+
     if (!callback) {
-      throw { error: "getThreadHistoryGraphQL: need callback" };
+      callback = function (err, data) {
+        if (err) {
+          return rejectFunc(err);
+        }
+        resolveFunc(data);
+      };
     }
 
     // `queries` has to be a string. I couldn't tell from the dev console. This
@@ -619,7 +630,7 @@ module.exports = function(defaultFuncs, api, ctx) {
         // failure one.
         // @TODO What do we do in this case?
         if (resData[resData.length - 1].error_results !== 0) {
-          throw new Error("well darn there was an error_result");
+          throw new Error("There was an error_result.");
         }
 
         callback(null, formatMessagesGraphQLResponse(resData[0]));
@@ -628,5 +639,7 @@ module.exports = function(defaultFuncs, api, ctx) {
         log.error("getThreadHistoryGraphQL", err);
         return callback(err);
       });
+
+    return returnPromise;
   };
 };

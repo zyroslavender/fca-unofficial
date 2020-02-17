@@ -5,11 +5,24 @@ var log = require("npmlog");
 
 module.exports = function(defaultFuncs, api, ctx) {
   return function createPoll(title, threadID, options, callback) {
+    var resolveFunc = function(){};
+    var rejectFunc = function(){};
+    var returnPromise = new Promise(function (resolve, reject) {
+      resolveFunc = resolve;
+      rejectFunc = reject;
+    });
+
     if (!callback) {
       if (utils.getType(options) == "Function") {
         callback = options;
+        options = null;
       } else {
-        callback = function() {};
+        callback = function(err) {
+          if (err) {
+            return rejectFunc(err);
+          }
+          resolveFunc();
+        };
       }
     }
     if (!options) {
@@ -51,5 +64,7 @@ module.exports = function(defaultFuncs, api, ctx) {
         log.error("createPoll", err);
         return callback(err);
       });
+
+    return returnPromise;
   };
 };

@@ -5,6 +5,13 @@ var log = require("npmlog");
 
 module.exports = function(defaultFuncs, api, ctx) {
   return function addUserToGroup(userID, threadID, callback) {
+    var resolveFunc = function(){};
+    var rejectFunc = function(){};
+    var returnPromise = new Promise(function (resolve, reject) {
+      resolveFunc = resolve;
+      rejectFunc = reject;
+    });
+
     if (
       !callback &&
       (utils.getType(threadID) === "Function" ||
@@ -14,7 +21,12 @@ module.exports = function(defaultFuncs, api, ctx) {
     }
 
     if (!callback) {
-      callback = function() {};
+      callback = function(err) {
+        if (err) {
+          return rejectFunc(err);
+        }
+        resolveFunc();
+      };
     }
 
     if (
@@ -95,5 +107,7 @@ module.exports = function(defaultFuncs, api, ctx) {
         log.error("addUserToGroup", err);
         return callback(err);
       });
+      
+    return returnPromise;
   };
 };

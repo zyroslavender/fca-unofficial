@@ -124,8 +124,20 @@ function formatThreadGraphQLResponse(data) {
 
 module.exports = function(defaultFuncs, api, ctx) {
   return function getThreadInfoGraphQL(threadID, callback) {
+    var resolveFunc = function(){};
+    var rejectFunc = function(){};
+    var returnPromise = new Promise(function (resolve, reject) {
+      resolveFunc = resolve;
+      rejectFunc = reject;
+    });
+
     if (!callback) {
-      throw { error: "getThreadInfoGraphQL: need callback" };
+      callback = function (err, data) {
+        if (err) {
+          return rejectFunc(err);
+        }
+        resolveFunc(data);
+      };
     }
 
     // `queries` has to be a string. I couldn't tell from the dev console. This
@@ -166,5 +178,7 @@ module.exports = function(defaultFuncs, api, ctx) {
         log.error("getThreadInfoGraphQL", err);
         return callback(err);
       });
+
+    return returnPromise;
   };
 };
