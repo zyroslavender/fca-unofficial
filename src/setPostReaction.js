@@ -55,7 +55,7 @@ module.exports = function(defaultFuncs, api, ctx) {
         return callback();
       })
       .catch(function(err) {
-        log.error("unfriend", err);
+        log.error("setPostReaction", err);
         return callback(err);
       });
   };

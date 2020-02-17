@@ -26,8 +26,8 @@ module.exports = function(defaultFuncs, api, ctx) {
     form["ids[" + threadID + "]"] = read;
     form["watermarkTimestamp"] = new Date().getTime();
     form["shouldSendReadReceipt"] = true;
-    form["commerce_last_message_type"] = "non_ad";
-    form["titanOriginatedThreadId"] = utils.generateThreadingID(ctx.clientID);
+    form["commerce_last_message_type"] = "";
+    //form["titanOriginatedThreadId"] = utils.generateThreadingID(ctx.clientID);
 
     defaultFuncs
       .post(

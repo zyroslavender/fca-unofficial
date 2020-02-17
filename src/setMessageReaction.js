@@ -49,7 +49,6 @@ module.exports = function(defaultFuncs, api, ctx) {
         break;
       default:
         return callback({ error: "Reaction is not a valid emoji." });
-        break;
     }
 
     var variables = {
