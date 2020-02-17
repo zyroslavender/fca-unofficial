@@ -89,6 +89,12 @@ If `callback` is supplied:
 
 * `callback` will be called with an error object if failed to login.
 
+If `login-approval` error was thrown: Inside error object is `continue` function, you can call that function with 2FA code. The behaviour of this function depends on how you call `login` with:
+
+* If `callback` is not supplied (using `Promise`), this function will return a `Promise` that behaves like `Promise` received from `login`.
+
+* If `callback` is supplied, this function will still return a `Promise`, but it will not resolve. Instead, the result is called to `callback`.
+
 __Arguments__
 
 * `credentials`: An object containing the fields `email` and `password` used to login, __*or*__ an object containing the field `appState`.
