@@ -349,6 +349,8 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
               mentions: rmentions,
               timestamp: delta.deltaMessageReply.repliedToMessage.messageMetadata.timestamp,
             };
+          } else {
+            callbackToReturn.delta = delta;
           }
 
           if (ctx.globalOptions.autoMarkDelivery) {
