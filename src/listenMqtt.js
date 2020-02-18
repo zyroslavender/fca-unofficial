@@ -92,7 +92,7 @@ function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
   mqttClient = fbconnect.connect(host, options);
 
   mqttClient.on('error', function(err) {
-    log.error(err);
+    log.error("listenMqtt", err);
     mqttClient.end();
     globalCallback("Connection refused: Server unavailable", null);
   });
@@ -494,12 +494,12 @@ function markDelivery(ctx, api, threadID, messageID) {
   if (threadID && messageID) {
     api.markAsDelivered(threadID, messageID, (err) => {
       if (err) {
-        log.error(err);
+        log.error("markAsDelivered", err);
       } else {
         if (ctx.globalOptions.autoMarkRead) {
           api.markAsRead(threadID, (err) => {
             if (err) {
-              log.error(err);
+              log.error("markAsDelivered", err);
             }
           });
         }
@@ -563,8 +563,8 @@ module.exports = function (defaultFuncs, api, ctx) {
     var stopListening = function (callback) {
       globalCallback = identity;
       mqttClient.unsubscribe("/webrtc");
-      mqttClient.unsubscribe("/rtc_multi", "{}");
-      mqttClient.unsubscribe("/onevc", "{}");
+      mqttClient.unsubscribe("/rtc_multi");
+      mqttClient.unsubscribe("/onevc");
       mqttClient.publish("/browser_close", "{}");
       mqttClient.end(true, callback);
     };
