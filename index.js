@@ -532,7 +532,7 @@ function login(loginData, options, callback) {
   setOptions(globalOptions, options);
 
   var prCallback = null;
-  if (utils.getType(callback) != "Function" || utils.getType(callback) != "AsyncFunction") {
+  if (utils.getType(callback) !== "Function" && utils.getType(callback) !== "AsyncFunction") {
     var rejectFunc = null;
     var resolveFunc = null;
     var returnPromise = new Promise(function (resolve, reject) {
