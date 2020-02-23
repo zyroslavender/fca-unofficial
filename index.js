@@ -387,7 +387,8 @@ function loginHelper(appState, email, password, globalOptions, callback) {
       api = stuff[2];
       return res;
     })
-    .then(function() {
+    //? Facebook is not using reconnect endpoint anymore.
+    /* .then(function() {
       var form = {
         reason: 6
       };
@@ -395,7 +396,7 @@ function loginHelper(appState, email, password, globalOptions, callback) {
       return defaultFuncs
         .get("https://www.facebook.com/ajax/presence/reconnect.php", ctx.jar, form)
         .then(utils.saveCookies(ctx.jar));
-    })
+    }) */
     .then(function(_res) {
       log.info("login", 'Request to base pull');
       var form = {
