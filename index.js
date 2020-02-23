@@ -482,8 +482,8 @@ function loginHelper(appState, email, password, globalOptions, callback) {
           if (globalOptions.online) {
             form.state = 'active';
           }
-          log.error("login", "Not logged in.");
         }
+        log.error("login", "Not logged in.");
       }, 1);
     });
 
