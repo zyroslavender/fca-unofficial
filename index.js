@@ -121,7 +121,6 @@ function buildAPI(globalOptions, html, jar) {
     'getUserID',
     'getUserInfo',
     'handleMessageRequest',
-    'listen',
     'listenMqtt',
     'logout',
     'markAsDelivered',
@@ -138,7 +137,12 @@ function buildAPI(globalOptions, html, jar) {
     'threadColors',
     'unsendMessage',
 
+    // HTTP
+    'httpGet',
+    'httpPost',
+
     // Deprecated features
+    'listen',
     "getThreadListDeprecated",
     'getThreadHistoryDeprecated',
     'getThreadInfoDeprecated',
@@ -444,7 +448,7 @@ function loginHelper(appState, email, password, globalOptions, callback) {
       var lastOnlineTime = new Date();
       setTimeout(function () {
         var done = false;
-        for (;;) {
+        while (ctx.loggedIn) {
           log.info("login", "Request to pull (ping)");
           done = false;
           utils.get("https://0-edge-chat.facebook.com/pull", ctx.jar, form, globalOptions)
@@ -478,6 +482,7 @@ function loginHelper(appState, email, password, globalOptions, callback) {
           if (globalOptions.online) {
             form.state = 'active';
           }
+          log.error("login", "Not logged in.");
         }
       }, 1);
     });
