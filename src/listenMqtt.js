@@ -528,7 +528,20 @@ function markDelivery(ctx, api, threadID, messageID) {
 module.exports = function (defaultFuncs, api, ctx) {
   var globalCallback = identity;
   return function (callback) {
-    var msgEmitter = new EventEmitter();
+    var listening = true;
+    class MessageEmitter extends EventEmitter {
+      stopListening(callback) {
+        globalCallback = identity;
+        mqttClient.unsubscribe("/webrtc");
+        mqttClient.unsubscribe("/rtc_multi");
+        mqttClient.unsubscribe("/onevc");
+        mqttClient.publish("/browser_close", "{}");
+        mqttClient.end(false, callback);
+        listening = false;
+      }
+    }
+
+    var msgEmitter = new MessageEmitter();
     globalCallback = (callback || function (error, message) {
       if (error) {
         return msgEmitter.emit("error", error);
@@ -553,45 +566,48 @@ module.exports = function (defaultFuncs, api, ctx) {
       })
     };
 
-    defaultFuncs
-      .post("https://www.facebook.com/api/graphqlbatch/", ctx.jar, form)
-      .then(utils.parseAndCheckLogin(ctx, defaultFuncs))
-      .then((resData) => {
-        if (utils.getType(resData) != "Array") {
-          throw {
-            error: "Not logged in",
-            res: resData
-          };
-        }
+    function getSeqID() {
+      defaultFuncs
+        .post("https://www.facebook.com/api/graphqlbatch/", ctx.jar, form)
+        .then(utils.parseAndCheckLogin(ctx, defaultFuncs))
+        .then((resData) => {
+          if (utils.getType(resData) != "Array") {
+            throw {
+              error: "Not logged in",
+              res: resData
+            };
+          }
 
-        if (resData && resData[resData.length - 1].error_results > 0) {
-          throw resData[0].o0.errors;
-        }
+          if (resData && resData[resData.length - 1].error_results > 0) {
+            throw resData[0].o0.errors;
+          }
 
-        if (resData[resData.length - 1].successful_results === 0) {
-          throw { error: "getSeqId: there was no successful_results", res: resData };
-        }
+          if (resData[resData.length - 1].successful_results === 0) {
+            throw { error: "getSeqId: there was no successful_results", res: resData };
+          }
 
-        if (resData[0].o0.data.viewer.message_threads.sync_sequence_id) {
-          lastSeqId = resData[0].o0.data.viewer.message_threads.sync_sequence_id;
-          listenMqtt(defaultFuncs, api, ctx, globalCallback);
-        }
+          if (resData[0].o0.data.viewer.message_threads.sync_sequence_id) {
+            lastSeqId = resData[0].o0.data.viewer.message_threads.sync_sequence_id;
+            listenMqtt(defaultFuncs, api, ctx, globalCallback);
+            setTimeout(function() {
+              if (listening) {
+                mqttClient.end(false, function () {
+                  getSeqID();
+                });
+              }
+            }, 3000000);
+          }
 
-      })
-      .catch((err) => {
-        log.error("getSeqId", err);
-        return callback(err);
-      });
-
-    var stopListening = function (callback) {
-      globalCallback = identity;
-      mqttClient.unsubscribe("/webrtc");
-      mqttClient.unsubscribe("/rtc_multi");
-      mqttClient.unsubscribe("/onevc");
-      mqttClient.publish("/browser_close", "{}");
-      mqttClient.end(true, callback);
-    };
-
-    return stopListening;
+        })
+        .catch((err) => {
+          log.error("getSeqId", err);
+          if (utils.getType(err) == "Object" && err.error === "Not logged in") {
+            ctx.loggedIn = false;
+          }
+          return callback(err);
+        });
+    }
+    getSeqID();
+    return msgEmitter;
   };
 };
