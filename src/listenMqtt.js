@@ -360,8 +360,77 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
               body: delta.deltaMessageReply.repliedToMessage.body || "",
               isGroup: !!delta.deltaMessageReply.repliedToMessage.messageMetadata.threadKey.threadFbId,
               mentions: rmentions,
-              timestamp: delta.deltaMessageReply.repliedToMessage.messageMetadata.timestamp,
+              timestamp: delta.deltaMessageReply.repliedToMessage.messageMetadata.timestamp
             };
+          } else if (delta.deltaMessageReply.replyToMessageId) {
+            return defaultFuncs
+              .post("https://www.facebook.com/api/graphqlbatch/", ctx.jar, {
+                "av": ctx.globalOptions.pageID,
+                "queries": JSON.stringify({
+                  "o0": {
+                    //This doc_id is valid as of ? (prob January 18, 2020)
+                    "doc_id": "1768656253222505",
+                    "query_params": {
+                      "thread_and_message_id": {
+                        "thread_id": callbackToReturn.threadID,
+                        "message_id": delta.deltaMessageReply.replyToMessageId.id,
+                      }
+                    }
+                  }
+                })
+              })
+              .then(utils.parseAndCheckLogin(ctx, defaultFuncs))
+              .then((resData) => {
+                if (resData[resData.length - 1].error_results > 0) {
+                  throw resData[0].o0.errors;
+                }
+  
+                if (resData[resData.length - 1].successful_results === 0) {
+                  throw { error: "forcedFetch: there was no successful_results", res: resData };
+                }
+  
+                var fetchData = resData[0].o0.data.message;
+
+                var mobj = {};
+                for (var n in fetchData.message.ranges) {
+                  mobj[fetchData.message.ranges[n].entity.id] = (fetchData.message.text || "").substr(fetchData.message.ranges[n].offset, fetchData.message.ranges[n].length);
+                }
+
+                callbackToReturn.messageReply = {
+                  threadID: callbackToReturn.threadID,
+                  messageID: fetchData.message_id,
+                  senderID: fetchData.message_sender.id.toString(),
+                  attachments: fetchData.message.blob_attachment.map(att => {
+                    var x;
+                    try {
+                      x = utils._formatAttachment({
+                        blob_attachment: att
+                      });
+                    } catch (ex) {
+                      x = att;
+                      x.error = ex;
+                      x.type = "unknown";
+                    }
+                    return x;
+                  }),
+                  body: fetchData.message.text || "",
+                  isGroup: callbackToReturn.isGroup,
+                  mentions: mobj,
+                  timestamp: parseInt(fetchData.timestamp_precise)
+                };
+              })
+              .catch((err) => {
+                log.error("forcedFetch", err);
+              })
+              .finally(function () {
+                if (ctx.globalOptions.autoMarkDelivery) {
+                  markDelivery(ctx, api, callbackToReturn.threadID, callbackToReturn.messageID);
+                }
+                !ctx.globalOptions.selfListen &&
+                  callbackToReturn.senderID === ctx.userID ?
+                  undefined :
+                  (function () { globalCallback(null, callbackToReturn); })();
+              });
           } else {
             callbackToReturn.delta = delta;
           }
