@@ -424,13 +424,20 @@ function loginHelper(appState, email, password, globalOptions, callback) {
           try {
             ret = JSON.parse(utils.makeParsable(res.body));
           } catch(e) {
-            throw {error: "Error inside first pull request. Received HTML instead of JSON. Logging in inside a browser might help fix this."};
+            log.warn("login", "Error inside first pull request. Received HTML instead of JSON. Facebook might removed pull request for this account.");
+            log.silly("login", res.body);
+            ret = {
+              t: "pull-removed"
+            };
           }
           return ret;
         });
     })
     .then(function(resData) {
-      if (resData.t !== 'lb') throw {error: "Bad response from base pull"};
+      if (resData.t !== 'lb') {
+        log.warn("login", `Bad response from base pull (t: ${resData.t})`);
+        return {error: "pull-removed"};
+      } 
 
       var form = {
         channel : 'p_' + ctx.userID,
