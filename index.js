@@ -126,6 +126,7 @@ function buildAPI(globalOptions, html, jar) {
     'markAsDelivered',
     'markAsRead',
     'markAsReadAll',
+    'markAsSeen',
     'muteThread',
     'removeUserFromGroup',
     'resolvePhotoUrl',
