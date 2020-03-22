@@ -131,7 +131,7 @@ module.exports = function(defaultFuncs, api, ctx) {
       rejectFunc = reject;
     });
 
-    if (!callback) {
+    if (utils.getType(callback) != "Function" && utils.getType(callback) != "AsyncFunction") {
       callback = function (err, data) {
         if (err) {
           return rejectFunc(err);
