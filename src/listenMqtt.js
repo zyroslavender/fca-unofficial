@@ -384,11 +384,11 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
                 if (resData[resData.length - 1].error_results > 0) {
                   throw resData[0].o0.errors;
                 }
-  
+
                 if (resData[resData.length - 1].successful_results === 0) {
                   throw { error: "forcedFetch: there was no successful_results", res: resData };
                 }
-  
+
                 var fetchData = resData[0].o0.data.message;
 
                 var mobj = {};
@@ -527,60 +527,63 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
 
             var fetchData = resData[0].o0.data.message;
 
-            if (fetchData) switch (fetchData.__typename) {
-              case "ThreadImageMessage":
-                (!ctx.globalOptions.selfListen &&
-                  fetchData.message_sender.id.toString() === ctx.userID) ||
-                  !ctx.loggedIn ?
-                  undefined :
+            if (utils.getType(fetchData) == "Object") {
+              switch (fetchData.__typename) {
+                case "ThreadImageMessage":
+                  (!ctx.globalOptions.selfListen &&
+                    fetchData.message_sender.id.toString() === ctx.userID) ||
+                    !ctx.loggedIn ?
+                    undefined :
+                    (function () {
+                      log.info("forcedFetch", fetchData);
+                      globalCallback(null, {
+                        type: "change_thread_image",
+                        threadID: utils.formatID(tid.toString()),
+                        snippet: fetchData.snippet,
+                        timestamp: fetchData.timestamp_precise,
+                        author: fetchData.message_sender.id,
+                        image: {
+                          attachmentID: fetchData.image_with_metadata.legacy_attachment_id,
+                          width: fetchData.image_with_metadata.original_dimensions.x,
+                          height: fetchData.image_with_metadata.original_dimensions.y,
+                          url: fetchData.image_with_metadata.preview.uri
+                        }
+                      });
+                    })();
+                  break;
+                case "UserMessage":
                   (function () {
-                    log.info("forcedFetch", fetchData); 
+                    log.info("forcedFetch", fetchData);
                     globalCallback(null, {
-                      type: "change_thread_image",
+                      type: "message",
+                      senderID: utils.formatID(fetchData.message_sender.id),
+                      body: fetchData.message.text || "",
                       threadID: utils.formatID(tid.toString()),
-                      snippet: fetchData.snippet,
-                      timestamp: fetchData.timestamp_precise,
-                      author: fetchData.message_sender.id,
-                      image: {
-                        attachmentID: fetchData.image_with_metadata.legacy_attachment_id,
-                        width: fetchData.image_with_metadata.original_dimensions.x,
-                        height: fetchData.image_with_metadata.original_dimensions.y,
-                        url: fetchData.image_with_metadata.preview.uri
-                      }
+                      messageID: fetchData.message_id,
+                      attachments: [{
+                        type: "share",
+                        ID: fetchData.extensible_attachment.legacy_attachment_id,
+                        url: fetchData.extensible_attachment.story_attachment.url,
+
+                        title: fetchData.extensible_attachment.story_attachment.title_with_entities.text,
+                        description: fetchData.extensible_attachment.story_attachment.description.text,
+                        source: fetchData.extensible_attachment.story_attachment.source,
+
+                        image: fetchData.extensible_attachment.story_attachment.media.image.uri,
+                        width: fetchData.extensible_attachment.story_attachment.media.image.width,
+                        height: fetchData.extensible_attachment.story_attachment.media.image.height,
+                        playable: fetchData.extensible_attachment.story_attachment.media.is_playable,
+                        duration: fetchData.extensible_attachment.story_attachment.media.playable_duration_in_ms,
+
+                        subattachments: fetchData.extensible_attachment.subattachments,
+                        properties: fetchData.extensible_attachment.story_attachment.properties,
+                      }],
+                      mentions: {},
+                      timestamp: parseInt(fetchData.timestamp_precise),
+                      isGroup: (fetchData.message_sender.id != tid.toString())
                     });
-                  })();
-                break;
-              case "UserMessage":
-                (function () { 
-                  globalCallback(null, {
-                    type: "message",
-                    senderID: utils.formatID(fetchData.message_sender.id),
-                    body: fetchData.message.text || "",
-                    threadID: utils.formatID(tid.toString()),
-                    messageID: fetchData.message_id,
-                    attachments: {
-                      type: "share",
-                      ID: fetchData.extensible_attachment.legacy_attachment_id,
-                      url: fetchData.extensible_attachment.story_attachment.url,
-              
-                      title: fetchData.extensible_attachment.story_attachment.title_with_entities.text,
-                      description: fetchData.extensible_attachment.story_attachment.description.text,
-                      source: fetchData.extensible_attachment.story_attachment.source,
-              
-                      image: fetchData.extensible_attachment.story_attachment.media.image.uri,
-                      width: fetchData.extensible_attachment.story_attachment.media.image.width,
-                      height: fetchData.extensible_attachment.story_attachment.media.image.height,
-                      playable: fetchData.extensible_attachment.story_attachment.media.is_playable,
-                      duration: fetchData.extensible_attachment.story_attachment.media.playable_duration_in_ms,
-              
-                      subattachments: fetchData.extensible_attachment.subattachments,
-                      properties: fetchData.extensible_attachment.story_attachment.properties,
-                    },
-                    mentions: {},
-                    timestamp: parseInt(fetchData.timestamp_precise),
-                    isGroup: (fetchData.message_sender.id != tid.toString())
                   });
-                });
+              }
             }
           })
           .catch((err) => {
@@ -692,7 +695,7 @@ module.exports = function (defaultFuncs, api, ctx) {
           if (resData[0].o0.data.viewer.message_threads.sync_sequence_id) {
             lastSeqId = resData[0].o0.data.viewer.message_threads.sync_sequence_id;
             listenMqtt(defaultFuncs, api, ctx, globalCallback);
-            setTimeout(function() {
+            setTimeout(function () {
               if (listening) {
                 mqttClient.end(false, function () {
                   getSeqID();
