@@ -528,6 +528,7 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
             var fetchData = resData[0].o0.data.message;
 
             if (utils.getType(fetchData) == "Object") {
+              log.info("forcedFetch", fetchData);
               switch (fetchData.__typename) {
                 case "ThreadImageMessage":
                   (!ctx.globalOptions.selfListen &&
@@ -535,7 +536,6 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
                     !ctx.loggedIn ?
                     undefined :
                     (function () {
-                      log.info("forcedFetch", fetchData);
                       globalCallback(null, {
                         type: "change_thread_image",
                         threadID: utils.formatID(tid.toString()),
@@ -553,7 +553,6 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
                   break;
                 case "UserMessage":
                   (function () {
-                    log.info("forcedFetch", fetchData);
                     globalCallback(null, {
                       type: "message",
                       senderID: utils.formatID(fetchData.message_sender.id),
@@ -584,6 +583,8 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
                     });
                   });
               }
+            } else {
+              log.error("forcedFetch", fetchData);
             }
           })
           .catch((err) => {
