@@ -501,8 +501,8 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
           "av": ctx.globalOptions.pageID,
           "queries": JSON.stringify({
             "o0": {
-              //This doc_id is valid as of ? (prob January 18, 2020)
-              "doc_id": "1768656253222505",
+              //This doc_id is valid as of March 25, 2020
+              "doc_id": "2848441488556444",
               "query_params": {
                 "thread_and_message_id": {
                   "thread_id": tid.toString(),
@@ -552,6 +552,34 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
                     })();
                   break;
                 case "UserMessage":
+                  log.info("ff-Return", {
+                    type: "message",
+                    senderID: utils.formatID(fetchData.message_sender.id),
+                    body: fetchData.message.text || "",
+                    threadID: utils.formatID(tid.toString()),
+                    messageID: fetchData.message_id,
+                    attachments: [{
+                      type: "share",
+                      ID: fetchData.extensible_attachment.legacy_attachment_id,
+                      url: fetchData.extensible_attachment.story_attachment.url,
+
+                      title: fetchData.extensible_attachment.story_attachment.title_with_entities.text,
+                      description: fetchData.extensible_attachment.story_attachment.description.text,
+                      source: fetchData.extensible_attachment.story_attachment.source,
+
+                      image: ((fetchData.extensible_attachment.story_attachment.media || {}).image || {}).uri,
+                      width: ((fetchData.extensible_attachment.story_attachment.media || {}).image || {}).width,
+                      height: ((fetchData.extensible_attachment.story_attachment.media || {}).image || {}).height,
+                      playable: (fetchData.extensible_attachment.story_attachment.media || {}).is_playable || false,
+                      duration: (fetchData.extensible_attachment.story_attachment.media || {}).playable_duration_in_ms || 0,
+
+                      subattachments: fetchData.extensible_attachment.subattachments,
+                      properties: fetchData.extensible_attachment.story_attachment.properties,
+                    }],
+                    mentions: {},
+                    timestamp: parseInt(fetchData.timestamp_precise),
+                    isGroup: (fetchData.message_sender.id != tid.toString())
+                  });
                   (function () {
                     globalCallback(null, {
                       type: "message",
@@ -568,11 +596,11 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
                         description: fetchData.extensible_attachment.story_attachment.description.text,
                         source: fetchData.extensible_attachment.story_attachment.source,
 
-                        image: fetchData.extensible_attachment.story_attachment.media.image.uri,
-                        width: fetchData.extensible_attachment.story_attachment.media.image.width,
-                        height: fetchData.extensible_attachment.story_attachment.media.image.height,
-                        playable: fetchData.extensible_attachment.story_attachment.media.is_playable,
-                        duration: fetchData.extensible_attachment.story_attachment.media.playable_duration_in_ms,
+                        image: ((fetchData.extensible_attachment.story_attachment.media || {}).image || {}).uri,
+                        width: ((fetchData.extensible_attachment.story_attachment.media || {}).image || {}).width,
+                        height: ((fetchData.extensible_attachment.story_attachment.media || {}).image || {}).height,
+                        playable: (fetchData.extensible_attachment.story_attachment.media || {}).is_playable || false,
+                        duration: (fetchData.extensible_attachment.story_attachment.media || {}).playable_duration_in_ms || 0,
 
                         subattachments: fetchData.extensible_attachment.subattachments,
                         properties: fetchData.extensible_attachment.story_attachment.properties,
