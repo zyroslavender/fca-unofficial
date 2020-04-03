@@ -8,12 +8,9 @@ var HttpsProxyAgent = require('https-proxy-agent');
 const EventEmitter = require('events');
 
 var identity = function () { };
-var mqttClient = undefined;
-
-var lastSeqId = 0;
-var syncToken;
 
 //Don't really know what this does but I think it's for the active state?
+//TODO: Move to ctx when implemented
 var chatOn = true;
 var foreground = false;
 
@@ -94,7 +91,9 @@ function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
     options.wsOptions.agent = agent;
   }
 
-  mqttClient = new mqtt.Client(_ => websocket(host, options.wsOptions), options);
+  ctx.mqttClient = new mqtt.Client(_ => websocket(host, options.wsOptions), options);
+
+  var mqttClient = ctx.mqttClient;
 
   mqttClient.on('error', function (err) {
     log.error("listenMqtt", err);
@@ -116,13 +115,13 @@ function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
       entity_fbid: ctx.userID,
     };
 
-    if (syncToken) {
+    if (ctx.syncToken) {
       topic = "/messenger_sync_get_diffs";
-      queue.last_seq_id = lastSeqId;
-      queue.sync_token = syncToken;
+      queue.last_seq_id = ctx.lastSeqId;
+      queue.sync_token = ctx.syncToken;
     } else {
       topic = "/messenger_sync_create_queue";
-      queue.initial_titan_sequence_id = lastSeqId;
+      queue.initial_titan_sequence_id = ctx.lastSeqId;
       queue.device_params = null;
     }
 
@@ -137,12 +136,12 @@ function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
     }
     if (topic === "/t_ms") {
       if (jsonMessage.firstDeltaSeqId && jsonMessage.syncToken) {
-        lastSeqId = jsonMessage.firstDeltaSeqId;
-        syncToken = jsonMessage.syncToken;
+        ctx.lastSeqId = jsonMessage.firstDeltaSeqId;
+        ctx.syncToken = jsonMessage.syncToken;
       }
 
       if (jsonMessage.lastIssuedSeqId) {
-        lastSeqId = parseInt(jsonMessage.lastIssuedSeqId);
+        ctx.lastSeqId = parseInt(jsonMessage.lastIssuedSeqId);
       }
 
       //If it contains more than 1 delta
@@ -544,10 +543,10 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
                         timestamp: fetchData.timestamp_precise,
                         author: fetchData.message_sender.id,
                         image: {
-                          attachmentID: fetchData.image_with_metadata.legacy_attachment_id,
-                          width: fetchData.image_with_metadata.original_dimensions.x,
-                          height: fetchData.image_with_metadata.original_dimensions.y,
-                          url: fetchData.image_with_metadata.preview.uri
+                          attachmentID: fetchData.image_with_metadata && fetchData.image_with_metadata.legacy_attachment_id,
+                          width: fetchData.image_with_metadata && fetchData.image_with_metadata.original_dimensions.x,
+                          height: fetchData.image_with_metadata && fetchData.image_with_metadata.original_dimensions.y,
+                          url: fetchData.image_with_metadata && fetchData.image_with_metadata.preview.uri
                         }
                       });
                     })();
@@ -581,35 +580,33 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
                     timestamp: parseInt(fetchData.timestamp_precise),
                     isGroup: (fetchData.message_sender.id != tid.toString())
                   });
-                  (function () {
-                    globalCallback(null, {
-                      type: "message",
-                      senderID: utils.formatID(fetchData.message_sender.id),
-                      body: fetchData.message.text || "",
-                      threadID: utils.formatID(tid.toString()),
-                      messageID: fetchData.message_id,
-                      attachments: [{
-                        type: "share",
-                        ID: fetchData.extensible_attachment.legacy_attachment_id,
-                        url: fetchData.extensible_attachment.story_attachment.url,
+                  globalCallback(null, {
+                    type: "message",
+                    senderID: utils.formatID(fetchData.message_sender.id),
+                    body: fetchData.message.text || "",
+                    threadID: utils.formatID(tid.toString()),
+                    messageID: fetchData.message_id,
+                    attachments: [{
+                      type: "share",
+                      ID: fetchData.extensible_attachment.legacy_attachment_id,
+                      url: fetchData.extensible_attachment.story_attachment.url,
 
-                        title: fetchData.extensible_attachment.story_attachment.title_with_entities.text,
-                        description: fetchData.extensible_attachment.story_attachment.description.text,
-                        source: fetchData.extensible_attachment.story_attachment.source,
+                      title: fetchData.extensible_attachment.story_attachment.title_with_entities.text,
+                      description: fetchData.extensible_attachment.story_attachment.description.text,
+                      source: fetchData.extensible_attachment.story_attachment.source,
 
-                        image: ((fetchData.extensible_attachment.story_attachment.media || {}).image || {}).uri,
-                        width: ((fetchData.extensible_attachment.story_attachment.media || {}).image || {}).width,
-                        height: ((fetchData.extensible_attachment.story_attachment.media || {}).image || {}).height,
-                        playable: (fetchData.extensible_attachment.story_attachment.media || {}).is_playable || false,
-                        duration: (fetchData.extensible_attachment.story_attachment.media || {}).playable_duration_in_ms || 0,
+                      image: ((fetchData.extensible_attachment.story_attachment.media || {}).image || {}).uri,
+                      width: ((fetchData.extensible_attachment.story_attachment.media || {}).image || {}).width,
+                      height: ((fetchData.extensible_attachment.story_attachment.media || {}).image || {}).height,
+                      playable: (fetchData.extensible_attachment.story_attachment.media || {}).is_playable || false,
+                      duration: (fetchData.extensible_attachment.story_attachment.media || {}).playable_duration_in_ms || 0,
 
-                        subattachments: fetchData.extensible_attachment.subattachments,
-                        properties: fetchData.extensible_attachment.story_attachment.properties,
-                      }],
-                      mentions: {},
-                      timestamp: parseInt(fetchData.timestamp_precise),
-                      isGroup: (fetchData.message_sender.id != tid.toString())
-                    });
+                      subattachments: fetchData.extensible_attachment.subattachments,
+                      properties: fetchData.extensible_attachment.story_attachment.properties,
+                    }],
+                    mentions: {},
+                    timestamp: parseInt(fetchData.timestamp_precise),
+                    isGroup: (fetchData.message_sender.id != tid.toString())
                   });
               }
             } else {
@@ -668,12 +665,17 @@ module.exports = function (defaultFuncs, api, ctx) {
     class MessageEmitter extends EventEmitter {
       stopListening(callback) {
         globalCallback = identity;
-        mqttClient.unsubscribe("/webrtc");
-        mqttClient.unsubscribe("/rtc_multi");
-        mqttClient.unsubscribe("/onevc");
-        mqttClient.publish("/browser_close", "{}");
-        mqttClient.end(false, callback);
-        listening = false;
+        if (ctx.mqttClient) {
+          ctx.mqttClient.unsubscribe("/webrtc");
+          ctx.mqttClient.unsubscribe("/rtc_multi");
+          ctx.mqttClient.unsubscribe("/onevc");
+          ctx.mqttClient.publish("/browser_close", "{}");
+          ctx.mqttClient.end(false, function (...data) {
+            callback.call(globalThis, data);
+            ctx.mqttClient = undefined;
+            listening = false;
+          });
+        }
       }
     }
 
@@ -684,6 +686,10 @@ module.exports = function (defaultFuncs, api, ctx) {
       }
       msgEmitter.emit("message", message);
     });
+
+    //Reset some stuff
+    ctx.lastSeqId = 0;
+    ctx.syncToken = undefined;
 
     //Same request as getThreadList
     const form = {
@@ -723,13 +729,22 @@ module.exports = function (defaultFuncs, api, ctx) {
           }
 
           if (resData[0].o0.data.viewer.message_threads.sync_sequence_id) {
-            lastSeqId = resData[0].o0.data.viewer.message_threads.sync_sequence_id;
+            ctx.lastSeqId = resData[0].o0.data.viewer.message_threads.sync_sequence_id;
             listenMqtt(defaultFuncs, api, ctx, globalCallback);
             setTimeout(function () {
               if (listening) {
-                mqttClient.end(false, function () {
+                /* mqttClient.end(false, function () {
                   getSeqID();
-                });
+                }); */
+                if (ctx.mqttClient) {
+                  ctx.mqttClient.unsubscribe("/webrtc");
+                  ctx.mqttClient.unsubscribe("/rtc_multi");
+                  ctx.mqttClient.unsubscribe("/onevc");
+                  ctx.mqttClient.publish("/browser_close", "{}");
+                  ctx.mqttClient.end(false);
+                  ctx.mqttClient = undefined;
+                  getSeqID();
+                }
               }
             }, 3000000);
           }
