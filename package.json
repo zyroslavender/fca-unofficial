@@ -22,7 +22,7 @@
   "author": "Avery, David, Maude, Benjamin",
   "license": "MIT",
   "dependencies": {
-    "bluebird": "^2.9.27",
+    "bluebird": "^3.0.0",
     "cheerio": "^0.22.0",
     "deasync": "^0.1.19",
     "https-proxy-agent": "^4.0.0",
