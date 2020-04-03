@@ -1,6 +1,6 @@
 {
   "name": "fca-unofficial",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "A Facebook chat API that doesn't rely on XMPP. Will NOT be deprecated after April 30th 2015.",
   "scripts": {
     "test": "mocha",
@@ -22,7 +22,7 @@
   "author": "Avery, David, Maude, Benjamin",
   "license": "MIT",
   "dependencies": {
-    "bluebird": "^3.0.0",
+    "bluebird": "^2.11.0",
     "cheerio": "^0.22.0",
     "deasync": "^0.1.19",
     "https-proxy-agent": "^4.0.0",

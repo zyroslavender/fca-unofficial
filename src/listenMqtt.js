@@ -9,11 +9,6 @@ const EventEmitter = require('events');
 
 var identity = function () { };
 
-//Don't really know what this does but I think it's for the active state?
-//TODO: Move to ctx when implemented
-var chatOn = ctx.globalOptions.online;
-var foreground = false;
-
 var topics = [
   "/legacy_web",
   "/webrtc",
@@ -39,6 +34,11 @@ var topics = [
 ];
 
 function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
+  //Don't really know what this does but I think it's for the active state?
+  //TODO: Move to ctx when implemented
+  var chatOn = ctx.globalOptions.online;
+  var foreground = false;
+
   var sessionID = Math.floor(Math.random() * 9007199254740991) + 1;
   var username = {
     u: ctx.userID,
