@@ -11,7 +11,7 @@ var identity = function () { };
 
 //Don't really know what this does but I think it's for the active state?
 //TODO: Move to ctx when implemented
-var chatOn = true;
+var chatOn = ctx.globalOptions.online;
 var foreground = false;
 
 var topics = [
@@ -178,7 +178,7 @@ function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
   });
 
   mqttClient.on('close', function () {
-    (function () { globalCallback("Connection closed."); })();
+    //(function () { globalCallback("Connection closed."); })();
     // client.end();
   });
 }
