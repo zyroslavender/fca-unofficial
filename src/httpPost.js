@@ -22,9 +22,8 @@ module.exports = function(defaultFuncs, api, ctx) {
 
     defaultFuncs
       .post(url, ctx.jar, form)
-      .then(utils.parseAndCheckLogin(ctx, defaultFuncs))
       .then(function(resData) {
-        callback(null, resData);
+        callback(null, resData.body.toString());
       })
       .catch(function(err) {
         log.error("httpPost", err);
