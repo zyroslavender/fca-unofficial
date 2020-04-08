@@ -25,7 +25,7 @@ function getHeaders(url, options, ctx) {
     "User-Agent": options.userAgent,
     Connection: "keep-alive"
   };
-  if (ctx.region) {
+  if (ctx && ctx.region) {
     headers["X-MSGR-Region"] = ctx.region;
   }
 
