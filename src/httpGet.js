@@ -26,7 +26,7 @@ module.exports = function(defaultFuncs, api, ctx) {
     };
 
     defaultFuncs
-      .get(url, ctx.jar, form)
+      .get(url, ctx.jar, form, {})
       .then(function(resData) {
         callback(null, resData.body.toString());
       })

@@ -971,22 +971,22 @@ function makeDefaults(html, userID, ctx) {
     return newObj;
   }
 
-  function postWithDefaults(url, jar, form) {
-    return post(url, jar, mergeWithDefaults(form), ctx.globalOptions, ctx);
+  function postWithDefaults(url, jar, form, ctxx) {
+    return post(url, jar, mergeWithDefaults(form), ctx.globalOptions, ctxx || ctx);
   }
 
-  function getWithDefaults(url, jar, qs) {
-    return get(url, jar, mergeWithDefaults(qs), ctx.globalOptions, ctx);
+  function getWithDefaults(url, jar, qs, ctxx) {
+    return get(url, jar, mergeWithDefaults(qs), ctx.globalOptions, ctxx || ctx);
   }
 
-  function postFormDataWithDefault(url, jar, form, qs) {
+  function postFormDataWithDefault(url, jar, form, qs, ctxx) {
     return postFormData(
       url,
       jar,
       mergeWithDefaults(form),
       mergeWithDefaults(qs),
       ctx.globalOptions,
-      ctx
+      ctxx || ctx
     );
   }
 
