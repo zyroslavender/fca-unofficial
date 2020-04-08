@@ -4,7 +4,7 @@ var utils = require("../utils");
 var log = require("npmlog");
 
 module.exports = function(defaultFuncs, api, ctx) {
-  return function httpGet(url, form, callback) {
+  return function httpGet(url, form, callback, notAPI) {
     var resolveFunc = function(){};
     var rejectFunc = function(){};
 
@@ -25,15 +25,27 @@ module.exports = function(defaultFuncs, api, ctx) {
         resolveFunc(data);
     };
 
-    defaultFuncs
-      .post(url, ctx.jar, form, {})
-      .then(function(resData) {
-        callback(null, resData.body.toString());
-      })
-      .catch(function(err) {
-        log.error("httpPost", err);
-        return callback(err);
-      });
+    if (notAPI) {
+      utils
+        .post(url, ctx.jar, form, ctx.globalOptions)
+        .then(function(resData) {
+          callback(null, resData.body.toString());
+        })
+        .catch(function(err) {
+          log.error("httpPost", err);
+          return callback(err);
+        });
+    } else {
+      defaultFuncs
+        .post(url, ctx.jar, form, {})
+        .then(function(resData) {
+          callback(null, resData.body.toString());
+        })
+        .catch(function(err) {
+          log.error("httpPost", err);
+          return callback(err);
+        });
+    }
 
     return returnPromise;
   };
