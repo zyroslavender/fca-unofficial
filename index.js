@@ -75,9 +75,23 @@ function buildAPI(globalOptions, html, jar) {
   }
 
   var userID = maybeCookie[0].cookieString().split("=")[1].toString();
-  log.info("login", "Logged in");
+  log.info("login", `Logged in as ${userID}`);
 
   var clientID = (Math.random() * 2147483648 | 0).toString(16);
+
+  var mqttData = html.match(/(\["MqttWebConfig",\[\],{fbid:")(.*)(",appID:219994525426954,endpoint:")(.*)(",pollingEndpoint:")(.*)(3790])/g)[0];
+  var mqttEndpoint = null;
+  var region = null;
+  if (!mqttData) {
+    log.warn("login", "Cannot get MQTT endpoint & region.");
+  } else {
+    var mqttDataParsed = JSON.parse(mqttData)[2];
+    mqttEndpoint = mqttDataParsed.endpoint;
+    region = new URL(mqttEndpoint).searchParams.get("region").toLocaleUpperCase();
+    log.info("login", `Got this account's message region: ${region}`);
+    log.verbose("login", `MQTT endpoint: ${mqttEndpoint}`);
+    log.verbose("login", `Polling endpoint: ${mqttDataParsed.pollingEndpoint} (unused)`);
+  }
 
   // All data available to api functions
   var ctx = {
@@ -90,7 +104,9 @@ function buildAPI(globalOptions, html, jar) {
     clientMutationId: 0,
     mqttClient: undefined,
     lastSeqId: 0,
-    syncToken: undefined
+    syncToken: undefined,
+    mqttEndpoint: null,
+    region: region
   };
 
   var api = {
@@ -390,113 +406,6 @@ function loginHelper(appState, email, password, globalOptions, callback) {
       defaultFuncs = stuff[1];
       api = stuff[2];
       return res;
-    })
-    //? Facebook is not using reconnect endpoint anymore.
-    /* .then(function() {
-      var form = {
-        reason: 6
-      };
-      log.info("login", 'Request to reconnect');
-      return defaultFuncs
-        .get("https://www.facebook.com/ajax/presence/reconnect.php", ctx.jar, form)
-        .then(utils.saveCookies(ctx.jar));
-    }) */
-    .then(function(_res) {
-      log.info("login", 'Request to base pull');
-      var form = {
-        channel : 'p_' + ctx.userID,
-        seq : 0,
-        partition : -2,
-        clientid : ctx.clientID,
-        viewer_uid : ctx.userID,
-        uid : ctx.userID,
-        state : 'active',
-        idle : 0,
-        cap : 8,
-        msgs_recv: 0
-      };
-      var presence = utils.generatePresence(ctx.userID);
-      ctx.jar.setCookie("presence=" + presence + "; path=/; domain=.facebook.com; secure", "https://www.facebook.com");
-      ctx.jar.setCookie("locale=en_US; path=/; domain=.facebook.com; secure", "https://www.facebook.com");
-      ctx.jar.setCookie("a11y=" + utils.generateAccessiblityCookie() + "; path=/; domain=.facebook.com; secure", "https://www.facebook.com");
-      
-      return utils
-        .get("https://0-edge-chat.facebook.com/pull", ctx.jar, form, globalOptions)
-        .then(utils.saveCookies(ctx.jar))
-        .then(function(res) {
-          var ret = null;
-          try {
-            ret = JSON.parse(utils.makeParsable(res.body));
-          } catch(e) {
-            log.warn("login", "Error inside first pull request. Received HTML instead of JSON. Facebook might removed pull request for this account.");
-            log.silly("login", res.body);
-            ret = {
-              t: "pull-removed"
-            };
-          }
-          return ret;
-        });
-    })
-    .then(function(resData) {
-      if (resData.t !== 'lb') {
-        log.warn("login", `Bad response from base pull (t: ${resData.t})`);
-        return {error: "pull-removed"};
-      } 
-
-      var form = {
-        channel : 'p_' + ctx.userID,
-        seq : 0,
-        partition : -2,
-        clientid : ctx.clientID,
-        viewer_uid : ctx.userID,
-        uid : ctx.userID,
-        state : 'active',
-        idle : 0,
-        cap : 8,
-        msgs_recv:0,
-        sticky_token: resData.lb_info.sticky,
-        sticky_pool: resData.lb_info.pool,
-      };
-      var lastOnlineTime = new Date();
-      setTimeout(function () {
-        var done = false;
-        while (ctx.loggedIn) {
-          log.info("login", "Request to pull (ping)");
-          done = false;
-          utils.get("https://0-edge-chat.facebook.com/pull", ctx.jar, form, globalOptions)
-            .then(utils.saveCookies(ctx.jar))
-            .then(function () { 
-              done = true;
-            })
-            .catch(function (ex) {
-              log.error("login", ex);
-              done = true;
-            });
-          deasync.loopWhile(function () {
-            return !done;
-          });
-          if (globalOptions.online) {
-            lastOnlineTime = new Date();
-          }
-          form = {
-            channel: 'p_' + ctx.userID,
-            seq: 0,
-            partition: -2,
-            clientid: ctx.clientID,
-            viewer_uid: ctx.userID,
-            uid: ctx.userID,
-            idle: Math.floor((new Date().getTime() - lastOnlineTime.getTime()) / 1000),
-            cap: 8,
-            msgs_recv: 0,
-            sticky_token: resData.lb_info.sticky,
-            sticky_pool: resData.lb_info.pool,
-          };
-          if (globalOptions.online) {
-            form.state = 'active';
-          }
-        }
-        log.error("login", "Not logged in.");
-      }, 1);
     });
 
   // given a pageID we log in as a page

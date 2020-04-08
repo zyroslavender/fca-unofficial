@@ -61,9 +61,14 @@ function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
   };
   var cookies = ctx.jar.getCookies("https://www.facebook.com").join("; ");
 
-  //Region could be changed for better ping. (Region atn: Southeast Asia, region ash: West US, prob) (Don't really know if we need it).
-  //// var host = 'wss://edge-chat.facebook.com/chat?region=atn&sid=' + sessionID;
-  var host = 'wss://edge-chat.facebook.com/chat?sid=' + sessionID;
+  var host;
+  if (ctx.mqttEndpoint) {
+    host = `${ctx.mqttEndpoint}&sid=${sessionID}`;
+  } else if (ctx.region) {
+    host = `wss://edge-chat.facebook.com/chat?region=${ctx.region.toLocaleLowerCase()}&sid=${sessionID}`
+  } else {
+    host = `wss://edge-chat.facebook.com/chat?sid=${sessionID}`;
+  }
 
   var options = {
     clientId: "mqttwsclient",
@@ -77,7 +82,7 @@ function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
         'Origin': 'https://www.facebook.com',
         'User-Agent': ctx.globalOptions.userAgent,
         'Referer': 'https://www.facebook.com',
-        'Host': 'edge-chat.facebook.com'
+        'Host': new URL(host).hostname //'edge-chat.facebook.com'
       },
       origin: 'https://www.facebook.com',
       protocolVersion: 13

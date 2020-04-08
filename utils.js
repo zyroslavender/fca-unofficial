@@ -16,7 +16,7 @@ function setProxy(url) {
   }));
 }
 
-function getHeaders(url, options) {
+function getHeaders(url, options, ctx) {
   var headers = {
     "Content-Type": "application/x-www-form-urlencoded",
     Referer: "https://www.facebook.com/",
@@ -25,6 +25,9 @@ function getHeaders(url, options) {
     "User-Agent": options.userAgent,
     Connection: "keep-alive"
   };
+  if (ctx.region) {
+    headers["X-MSGR-Region"] = ctx.region;
+  }
 
   return headers;
 }
@@ -38,7 +41,7 @@ function isReadableStream(obj) {
   );
 }
 
-function get(url, jar, qs, options) {
+function get(url, jar, qs, options, ctx) {
   // I'm still confused about this
   if (getType(qs) === "Object") {
     for (var prop in qs) {
@@ -48,7 +51,7 @@ function get(url, jar, qs, options) {
     }
   }
   var op = {
-    headers: getHeaders(url, options),
+    headers: getHeaders(url, options, ctx),
     timeout: 60000,
     qs: qs,
     url: url,
@@ -62,9 +65,9 @@ function get(url, jar, qs, options) {
   });
 }
 
-function post(url, jar, form, options) {
+function post(url, jar, form, options, ctx) {
   var op = {
-    headers: getHeaders(url, options),
+    headers: getHeaders(url, options, ctx),
     timeout: 60000,
     url: url,
     method: "POST",
@@ -78,8 +81,8 @@ function post(url, jar, form, options) {
   });
 }
 
-function postFormData(url, jar, form, qs, options) {
-  var headers = getHeaders(url, options);
+function postFormData(url, jar, form, qs, options, ctx) {
+  var headers = getHeaders(url, options, ctx);
   headers["Content-Type"] = "multipart/form-data";
   var op = {
     headers: headers,
@@ -969,11 +972,11 @@ function makeDefaults(html, userID, ctx) {
   }
 
   function postWithDefaults(url, jar, form) {
-    return post(url, jar, mergeWithDefaults(form), ctx.globalOptions);
+    return post(url, jar, mergeWithDefaults(form), ctx.globalOptions, ctx);
   }
 
   function getWithDefaults(url, jar, qs) {
-    return get(url, jar, mergeWithDefaults(qs), ctx.globalOptions);
+    return get(url, jar, mergeWithDefaults(qs), ctx.globalOptions, ctx);
   }
 
   function postFormDataWithDefault(url, jar, form, qs) {
@@ -982,7 +985,8 @@ function makeDefaults(html, userID, ctx) {
       jar,
       mergeWithDefaults(form),
       mergeWithDefaults(qs),
-      ctx.globalOptions 
+      ctx.globalOptions,
+      ctx
     );
   }
 
