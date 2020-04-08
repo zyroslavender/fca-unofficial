@@ -13,6 +13,11 @@ module.exports = function(defaultFuncs, api, ctx) {
       rejectFunc = reject;
     });
 
+    if (!callback && (utils.getType(form) == "Function" || utils.getType(form) == "AsyncFunction")) {
+      callback = form;
+      form = {};
+    }
+
     form = form || {};
 
     callback = callback || function(err, data) {
