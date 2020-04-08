@@ -664,6 +664,7 @@ module.exports = function (defaultFuncs, api, ctx) {
     var listening = true;
     class MessageEmitter extends EventEmitter {
       stopListening(callback) {
+        callback = callback || (() => {});
         globalCallback = identity;
         if (ctx.mqttClient) {
           ctx.mqttClient.unsubscribe("/webrtc");
@@ -671,7 +672,7 @@ module.exports = function (defaultFuncs, api, ctx) {
           ctx.mqttClient.unsubscribe("/onevc");
           ctx.mqttClient.publish("/browser_close", "{}");
           ctx.mqttClient.end(false, function (...data) {
-            callback.call(globalThis, data);
+            callback(data);
             ctx.mqttClient = undefined;
             listening = false;
           });
