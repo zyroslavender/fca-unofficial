@@ -233,7 +233,11 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
 > });
 > ```
 
-## Projects using this API
+## Projects using this API:
+
+- [c3c](https://github.com/lequanglam/c3c) - A bot that can be customizable using plugins. Support Facebook & Discord.
+
+## Projects using this API (original repository, facebook-chat-api):
 
 - [Messer](https://github.com/mjkaufer/Messer) - Command-line messaging for Facebook Messenger
 - [messen](https://github.com/tomquirk/messen) - Rapidly build Facebook Messenger apps in Node.js
