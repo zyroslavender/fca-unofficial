@@ -79,11 +79,13 @@ function buildAPI(globalOptions, html, jar) {
 
   var clientID = (Math.random() * 2147483648 | 0).toString(16);
 
-  var mqttData = html.match(/(\["MqttWebConfig",\[\],{fbid:")(.+?)(",appID:219994525426954,endpoint:")(.+?)(",pollingEndpoint:")(.+?)(3790])/g)[0];
+  var mqttData = (html.match(/(\["MqttWebConfig",\[\],{fbid:")(.+?)(",appID:219994525426954,endpoint:")(.+?)(",pollingEndpoint:")(.+?)(3790])/g) || [])[0];
   var mqttEndpoint = null;
   var region = null;
+  var noMqttData = null;
   if (!mqttData) {
     log.warn("login", "Cannot get MQTT endpoint & region.");
+    noMqttData = html;
   } else {
     try {
       var mqttDataParsed = eval(mqttData)[2];
@@ -94,6 +96,7 @@ function buildAPI(globalOptions, html, jar) {
       log.verbose("login", `Polling endpoint: ${mqttDataParsed.pollingEndpoint} (unused)`);
     } catch (ex) {
       log.error("login", ex.toString());
+      noMqttData = html;
     }
   }
 
@@ -117,9 +120,13 @@ function buildAPI(globalOptions, html, jar) {
     setOptions: setOptions.bind(null, globalOptions),
     getAppState: function getAppState() {
       return utils.getAppState(jar);
-    },
+    }
   };
 
+  if (noMqttData) {
+    api["htmlData"] = noMqttData;
+  }
+  
   const apiFuncNames = [
     'addUserToGroup',
     'changeAdminStatus',
