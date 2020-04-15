@@ -7,8 +7,9 @@ module.exports = function(defaultFuncs, api, ctx) {
   return function markAsRead(seen_timestamp, callback) {
     if (utils.getType(seen_timestamp) == "Function" ||
       utils.getType(seen_timestamp) == "AsyncFunction") {
+        callback = seen_timestamp;
         seen_timestamp = Date.now();
-    }
+      }
 
     if (!callback) {
       callback = function() {};
