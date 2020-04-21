@@ -3,7 +3,8 @@
 var utils = require("./utils");
 var cheerio = require("cheerio");
 var log = require("npmlog");
-var deasync = require("deasync");
+
+var checkVerified = null;
 
 var defaultLogRecordSize = 100;
 log.maxRecordSize = defaultLogRecordSize;
@@ -74,8 +75,16 @@ function buildAPI(globalOptions, html, jar) {
     throw {error: "Error retrieving userID. This can be caused by a lot of things, including getting blocked by Facebook for logging in from an unknown location. Try logging in with a browser to verify."};
   }
 
+  if (html.indexOf("/checkpoint/block/?next") > -1) {
+    log.warn("login", "Checkpoint detected. Please log in with a browser to verify.");
+  }
+
   var userID = maybeCookie[0].cookieString().split("=")[1].toString();
   log.info("login", `Logged in as ${userID}`);
+
+  try {
+    clearInterval(checkVerified);
+  } catch (_) {}
 
   var clientID = (Math.random() * 2147483648 | 0).toString(16);
 
@@ -234,12 +243,12 @@ function makeLogin(jar, email, password, loginOptions, callback, prCallback) {
 
     log.info("login", "Logging in...");
     return utils
-      .post("https://www.facebook.com/login.php?login_attempt=1&lwv=110", jar, form, loginOptions)
+      .post("https://www.facebook.com/login/device-based/regular/login/?login_attempt=1&lwv=110", jar, form, loginOptions)
       .then(utils.saveCookies(jar))
       .then(function(res) {
         var headers = res.headers;
         if (!headers.location) {
-          throw {error: "Wrong username/password."};
+          throw { error: "Wrong username/password." };
         }
 
         // This means the account has login approvals turned on.
@@ -265,11 +274,28 @@ function makeLogin(jar, email, password, loginOptions, callback, prCallback) {
 
               var form = utils.arrToForm(arr);
               if (html.indexOf("checkpoint/?next") > -1) {
+                checkVerified = setInterval(() => {
+                  utils
+                    .post(nextURL, jar, form, loginOptions)
+                    .then(utils.saveCookies(jar))
+                    .then(res => {
+                      try {
+                        JSON.parse(res.replace(/for\s*\(\s*;\s*;\s*\)\s*;\s*/, ""));
+                      } catch (ex) {
+                        clearInterval(checkVerified);
+                        log.info("login", "Verified from another browser. Logging in...")
+                        return loginHelper(appState, email, password, loginOptions, callback);
+                      }
+                    })
+                    .catch(ex => {
+                      log.error("login", ex);
+                    });
+                }, 5500);
                 throw {
                   error: 'login-approval',
-                  continue: function(code) {
+                  continue: function (code) {
                     form.approvals_code = code;
-                    form['submit[Continue]'] = 'Continue';
+                    form['submit[Continue]'] = $("#checkpointSubmitButton").html(); //'Continue';
                     var prResolve = null;
                     var prReject = null;
                     var rtPromise = new Promise(function (resolve, reject) {
@@ -310,7 +336,12 @@ function makeLogin(jar, email, password, loginOptions, callback, prCallback) {
                         return loginHelper(appState, email, password, loginOptions, callback);
                       })
                       .catch(function(err) {
-                        prReject(err);
+                        // Check if using Promise instead of callback
+                        if (callback === prCallback) {
+                          prReject(err);
+                        } else {
+                          callback(err);
+                        }
                       });
                     return rtPromise;
                   }
