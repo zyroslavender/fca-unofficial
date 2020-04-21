@@ -50,7 +50,7 @@ function setOptions(globalOptions, options) {
         globalOptions.listenTyping = options.listenTyping;
         break;
       case 'proxy':
-        if (typeof options.proxy == "undefined") {
+        if (typeof options.proxy != "string") {
           delete globalOptions.proxy;
           utils.setProxy();
         } else {
