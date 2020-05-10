@@ -7,12 +7,12 @@ var stream = require("stream");
 var log = require("npmlog");
 
 function setProxy(url) {
-  if (typeof url == undefined) 
-    return request = bluebird.promisify(require("request").defaults({ 
-      jar: true, 
+  if (typeof url == undefined)
+    return request = bluebird.promisify(require("request").defaults({
+      jar: true,
     }));
-  return request = bluebird.promisify(require("request").defaults({ 
-    jar: true, 
+  return request = bluebird.promisify(require("request").defaults({
+    jar: true,
     proxy: url
   }));
 }
@@ -61,7 +61,7 @@ function get(url, jar, qs, options, ctx) {
     gzip: true
   };
 
-  return request(op).then(function(res) {
+  return request(op).then(function (res) {
     return res[0];
   });
 }
@@ -77,7 +77,7 @@ function post(url, jar, form, options, ctx) {
     gzip: true
   };
 
-  return request(op).then(function(res) {
+  return request(op).then(function (res) {
     return res[0];
   });
 }
@@ -96,7 +96,7 @@ function postFormData(url, jar, form, qs, options, ctx) {
     gzip: true
   };
 
-  return request(op).then(function(res) {
+  return request(op).then(function (res) {
     return res[0];
   });
 }
@@ -177,7 +177,7 @@ var j = {
   Z:
     "%2c%22sb%22%3a1%2c%22t%22%3a%5b%5d%2c%22f%22%3anull%2c%22uct%22%3a0%2c%22s%22%3a0%2c%22blo%22%3a0%7d%2c%22bl%22%3a%7b%22ac%22%3a"
 };
-(function() {
+(function () {
   var l = [];
   for (var m in j) {
     i[j[m]] = m;
@@ -189,11 +189,11 @@ var j = {
 
 function presenceEncode(str) {
   return encodeURIComponent(str)
-    .replace(/([_A-Z])|%../g, function(m, n) {
+    .replace(/([_A-Z])|%../g, function (m, n) {
       return n ? "%" + n.charCodeAt(0).toString(16) : m;
     })
     .toLowerCase()
-    .replace(h, function(m) {
+    .replace(h, function (m) {
       return i[m];
     });
 }
@@ -201,7 +201,7 @@ function presenceEncode(str) {
 // eslint-disable-next-line no-unused-vars
 function presenceDecode(str) {
   return decodeURIComponent(
-    str.replace(/[_A-Z]/g, function(m) {
+    str.replace(/[_A-Z]/g, function (m) {
       return j[m];
     })
   );
@@ -253,7 +253,7 @@ function getGUID() {
   /** @type {number} */
   var sectionLength = Date.now();
   /** @type {string} */
-  var id = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
+  var id = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
     /** @type {number} */
     var r = Math.floor((sectionLength + Math.random() * 16) % 16);
     /** @type {number} */
@@ -558,7 +558,7 @@ function _formatAttachment(attachment1, attachment2) {
             : blob.story_attachment.media.playable_url,
 
         subattachments: blob.story_attachment.subattachments,
-        properties: blob.story_attachment.properties.reduce(function(obj, cur) {
+        properties: blob.story_attachment.properties.reduce(function (obj, cur) {
           obj[cur.key] = cur.value.text;
           return obj;
         }, {}),
@@ -584,12 +584,12 @@ function _formatAttachment(attachment1, attachment2) {
     default:
       throw new Error(
         "unrecognized attach_file of type " +
-          type +
-          "`" +
-          JSON.stringify(attachment1, null, 4) +
-          " attachment2: " +
-          JSON.stringify(attachment2, null, 4) +
-          "`"
+        type +
+        "`" +
+        JSON.stringify(attachment1, null, 4) +
+        " attachment2: " +
+        JSON.stringify(attachment2, null, 4) +
+        "`"
       );
   }
 }
@@ -597,16 +597,16 @@ function _formatAttachment(attachment1, attachment2) {
 function formatAttachment(attachments, attachmentIds, attachmentMap, shareMap) {
   attachmentMap = shareMap || attachmentMap;
   return attachments
-    ? attachments.map(function(val, i) {
-        if (
-          !attachmentMap ||
-          !attachmentIds ||
-          !attachmentMap[attachmentIds[i]]
-        ) {
-          return _formatAttachment(val);
-        }
-        return _formatAttachment(val, attachmentMap[attachmentIds[i]]);
-      })
+    ? attachments.map(function (val, i) {
+      if (
+        !attachmentMap ||
+        !attachmentIds ||
+        !attachmentMap[attachmentIds[i]]
+      ) {
+        return _formatAttachment(val);
+      }
+      return _formatAttachment(val, attachmentMap[attachmentIds[i]]);
+    })
     : [];
 }
 
@@ -663,9 +663,9 @@ function formatMessage(m) {
       ? originalMessage.group_thread_info.participant_names
       : [originalMessage.sender_name.split(" ")[0]],
     participantIDs: originalMessage.group_thread_info
-      ? originalMessage.group_thread_info.participant_ids.map(function(v) {
-          return formatID(v.toString());
-        })
+      ? originalMessage.group_thread_info.participant_ids.map(function (v) {
+        return formatID(v.toString());
+      })
       : [formatID(originalMessage.sender_fbid)],
     body: originalMessage.body || "",
     threadID: formatID(
@@ -876,17 +876,17 @@ function makeParsable(html) {
 function arrToForm(form) {
   return arrayToObject(
     form,
-    function(v) {
+    function (v) {
       return v.name;
     },
-    function(v) {
+    function (v) {
       return v.val;
     }
   );
 }
 
 function arrayToObject(arr, getKey, getValue) {
-  return arr.reduce(function(acc, val) {
+  return arr.reduce(function (acc, val) {
     acc[getKey(val)] = getValue(val);
     return acc;
   }, {});
@@ -1002,8 +1002,8 @@ function parseAndCheckLogin(ctx, defaultFuncs, retryCount) {
   if (retryCount == undefined) {
     retryCount = 0;
   }
-  return function(data) {
-    return bluebird.try(function() {
+  return function (data) {
+    return bluebird.try(function () {
       log.verbose("parseAndCheckLogin", data.body);
       if (data.statusCode >= 500 && data.statusCode < 600) {
         if (retryCount >= 5) {
@@ -1019,12 +1019,12 @@ function parseAndCheckLogin(ctx, defaultFuncs, retryCount) {
         log.warn(
           "parseAndCheckLogin",
           "Got status code " +
-            data.statusCode +
-            " - " +
-            retryCount +
-            ". attempt to retry in " +
-            retryTime +
-            " milliseconds..."
+          data.statusCode +
+          " - " +
+          retryCount +
+          ". attempt to retry in " +
+          retryTime +
+          " milliseconds..."
         );
         var url =
           data.request.uri.protocol +
@@ -1037,7 +1037,7 @@ function parseAndCheckLogin(ctx, defaultFuncs, retryCount) {
         ) {
           return bluebird
             .delay(retryTime)
-            .then(function() {
+            .then(function () {
               return defaultFuncs.postFormData(
                 url,
                 ctx.jar,
@@ -1049,7 +1049,7 @@ function parseAndCheckLogin(ctx, defaultFuncs, retryCount) {
         } else {
           return bluebird
             .delay(retryTime)
-            .then(function() {
+            .then(function () {
               return defaultFuncs.post(url, ctx.jar, data.request.formData);
             })
             .then(parseAndCheckLogin(ctx, defaultFuncs, retryCount));
@@ -1058,8 +1058,8 @@ function parseAndCheckLogin(ctx, defaultFuncs, retryCount) {
       if (data.statusCode !== 200)
         throw new Error(
           "parseAndCheckLogin got status code: " +
-            data.statusCode +
-            ". Bailing out of trying to parse response."
+          data.statusCode +
+          ". Bailing out of trying to parse response."
         );
 
       var res = null;
@@ -1123,9 +1123,9 @@ function parseAndCheckLogin(ctx, defaultFuncs, retryCount) {
 }
 
 function saveCookies(jar) {
-  return function(res) {
+  return function (res) {
     var cookies = res.headers["set-cookie"] || [];
-    cookies.forEach(function(c) {
+    cookies.forEach(function (c) {
       if (c.indexOf(".facebook.com") > -1) {
         jar.setCookie(c, "https://www.facebook.com");
       }

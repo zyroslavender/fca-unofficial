@@ -9,8 +9,8 @@
 * [`api.changeNickname`](#changeNickname)
 * [`api.changeThreadColor`](#changeThreadColor)
 * [`api.changeThreadEmoji`](#changeThreadEmoji)
-* [`api.createPoll`](#createPoll)
 * [`api.createNewGroup`](#createNewGroup)
+* [`api.createPoll`](#createPoll)
 * [`api.deleteMessage`](#deleteMessage)
 * [`api.deleteThread`](#deleteThread)
 * [`api.forwardAttachment`](#forwardAttachment)
@@ -31,6 +31,7 @@
 * [`api.markAsDelivered`](#markAsDelivered)
 * [`api.markAsRead`](#markAsRead)
 * [`api.markAsReadAll`](#markAsReadAll)
+* [`api.markAsSeen`](#markAsSeen)
 * [`api.muteThread`](#muteThread)
 * [`api.removeUserFromGroup`](#removeUserFromGroup)
 * [`api.resolvePhotoUrl`](#resolvePhotoUrl)
@@ -381,8 +382,20 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
 
 ---------------------------------------
 
+<a name="createNewGroup"></a>
+### api.createNewGroup(participantIDs[, groupTitle][, callback])
+
+Create a new group chat.
+
+__Arguments__
+* `participantIDs`: An array containing participant IDs. (*Length must be >= 2*)
+* `groupTitle`: The title of the new group chat.
+* `callback(err, threadID)`: A callback called when created.
+
+---------------------------------------
+
 <a name="createPoll"></a>
-### api.createPoll(title, threadID[, options][, callback])
+### api.createPoll(title, threadID[, options][, callback]) (*temporary deprecated because Facebook is updating this feature*)
 
 Creates a poll with the specified title and optional poll options, which can also be initially selected by the logged-in user.
 
@@ -409,18 +422,6 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
     });
 });
 ```
-
----------------------------------------
-
-<a name="createNewGroup"></a>
-### api.createNewGroup(participantIDs[, title], callback)
-
-Create a new thread.
-
-__Arguments__
-* `participantIDs`: An array contains at least 2 IDs.
-* `title`: (Optional) Thread title.
-* `callback(err, threadID)`: A callback called when created a new thread (either with an error or threadID of new thread).
 
 ---------------------------------------
 
@@ -991,7 +992,7 @@ A dictionary mapping names of all currently valid thread themes to their theme I
 - Berry: `164535220883264`
 - Citrus: `370940413392601`
 - Candy: `205488546921017`
-- StarWars: `809305022860427`
+- ~~StarWars: `809305022860427`~~ (Facebook removed it.)
 
 ---------------------------------------
 
@@ -1009,7 +1010,7 @@ __Arguments__
 ---------------------------------------
 
 <a name="listen"></a>
-### api.listen(callback) (deprecated, use `api.listenMqtt` instead)
+### api.listen(callback) (**deprecated, use `api.listenMqtt` instead**)
 
 Will call `callback` when a new message is received on this account.
 By default this won't receive events (joining/leaving a chat, title change etc...) but it can be activated with `api.setOptions({listenEvents: true})`.  This will by default ignore messages sent by the current account, you can enable listening to your own messages with `api.setOptions({selfListen: true})`. This returns `stopListening` that will stop the `listen` loop and is guaranteed to prevent any future calls to the callback given to `listen`. An immediate call to `stopListening` when an error occurs will prevent the listen function to continue.
@@ -1337,7 +1338,7 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
 ---------------------------------------
 
 <a name="listenMqtt"></a>
-### api.listenMqtt(callback) (Experimental)
+### api.listenMqtt(callback)
 Same as [`api.listen`](#listen) but uses MQTT to recieve data.
 
 Will call `callback` when a new message is received on this account.
@@ -1399,9 +1400,9 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
 <a name="markAsRead"></a>
 ### api.markAsRead(threadID, [read[, callback]])
 
-Given a threadID will mark all the unread messages as read. Facebook will take a couple of seconds to show that you've read the messages.
+Given a threadID will mark all the unread messages in a thread as read. Facebook will take a couple of seconds to show that you've read the messages.
 
-You can also mark new messages as read automatically. See [api.setOptions](#setOptions).
+You can also mark new messages as read automatically. See [api.setOptions](#setOptions). But be careful, this will make your account getting banned, especially when receiving *HUGE* amount of messages.
 
 __Arguments__
 
@@ -1430,9 +1431,16 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
 ---------------------------------------
 
 <a name="markAsReadAll"></a>
-### api.markAsReadAll([callback]])
+### api.markAsReadAll([callback])
 
 This function will mark all of messages in your inbox readed.
+
+---------------------------------------
+
+<a name="markAsSeen"></a>
+### api.markAsSeen([seenTimestamp][, callback])
+
+This function will mark your entire inbox as seen (don't be confused with read!).
 
 ---------------------------------------
 

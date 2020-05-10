@@ -21,7 +21,7 @@ If you just want to use fca-unofficial, you should use this command:
 ```bash
 npm install fca-unofficial
 ```
-It will download fca-unofficial from NPM repositories
+It will download `fca-unofficial` from NPM repositories
 
 ### Bleeding edge
 If you want to use bleeding edge (directly from github) to test new features or submit bug report, this is the command for you:
@@ -53,45 +53,7 @@ Result:
 
 ## Documentation
 
-* [`login`](DOCS.md#login)
-* [`api.addUserToGroup`](DOCS.md#addUserToGroup)
-* [`api.changeAdminStatus`](DOCS.md#changeAdminStatus)
-* [`api.changeArchivedStatus`](DOCS.md#changeArchivedStatus)
-* [`api.changeBlockedStatus`](DOCS.md#changeBlockedStatus)
-* [`api.changeGroupImage`](DOCS.md#changeGroupImage)
-* [`api.changeNickname`](DOCS.md#changeNickname)
-* [`api.changeThreadColor`](DOCS.md#changeThreadColor)
-* [`api.changeThreadEmoji`](DOCS.md#changeThreadEmoji)
-* [`api.createPoll`](DOCS.md#createPoll)
-* [`api.createNewGroup`](DOCS.md#createNewGroup)
-* [`api.deleteMessage`](DOCS.md#deleteMessage)
-* [`api.deleteThread`](DOCS.md#deleteThread)
-* [`api.forwardAttachment`](DOCS.md#forwardAttachment)
-* [`api.getAppState`](DOCS.md#getAppState)
-* [`api.getCurrentUserID`](DOCS.md#getCurrentUserID)
-* [`api.getFriendsList`](DOCS.md#getFriendsList)
-* [`api.getThreadHistory`](DOCS.md#getThreadHistory)
-* [`api.getThreadInfo`](DOCS.md#getThreadInfo)
-* [`api.getThreadList`](DOCS.md#getThreadList)
-* [`api.getThreadPictures`](DOCS.md#getThreadPictures)
-* [`api.getUserID`](DOCS.md#getUserID)
-* [`api.getUserInfo`](DOCS.md#getUserInfo)
-* [`api.handleMessageRequest`](DOCS.md#handleMessageRequest)
-* [`api.listen`](DOCS.md#listen)
-* [`api.listenMqtt`](DOCS.md#listenMqtt)
-* [`api.logout`](DOCS.md#logout)
-* [`api.markAsRead`](DOCS.md#markAsRead)
-* [`api.markAsReadAll`](DOCS.md#markAsReadAll)
-* [`api.muteThread`](DOCS.md#muteThread)
-* [`api.removeUserFromGroup`](DOCS.md#removeUserFromGroup)
-* [`api.resolvePhotoUrl`](DOCS.md#resolvePhotoUrl)
-* [`api.searchForThread`](DOCS.md#searchForThread)
-* [`api.sendMessage`](DOCS.md#sendMessage)
-* [`api.sendTypingIndicator`](DOCS.md#sendTypingIndicator)
-* [`api.setMessageReaction`](DOCS.md#setMessageReaction)
-* [`api.setOptions`](DOCS.md#setOptions)
-* [`api.setTitle`](DOCS.md#setTitle)
-* [`api.unsendMessage`](DOCS.md#unsendMessage)
+You can see it [here](DOCS.md).
 
 ## Main Functionality
 
@@ -233,6 +195,7 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
 > });
 > ```
 
+<a name="projects-using-this-api"></a>
 ## Projects using this API:
 
 - [c3c](https://github.com/lequanglam/c3c) - A bot that can be customizable using plugins. Support Facebook & Discord.
