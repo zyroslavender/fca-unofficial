@@ -283,8 +283,8 @@ function makeLogin(jar, email, password, loginOptions, callback, prCallback) {
                         JSON.parse(res.replace(/for\s*\(\s*;\s*;\s*\)\s*;\s*/, ""));
                       } catch (ex) {
                         clearInterval(checkVerified);
-                        log.info("login", "Verified from another browser. Logging in...")
-                        return loginHelper(appState, email, password, loginOptions, callback);
+                        log.info("login", "Verified from another browser. Logging in...");
+                        return loginHelper(utils.getAppState(jar), email, password, loginOptions, callback);
                       }
                     })
                     .catch(ex => {
