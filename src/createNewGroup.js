@@ -53,7 +53,7 @@ module.exports = function(defaultFuncs, api, ctx) {
           entry_point: "jewel_new_group",
           actor_id: ctx.userID,
           participants: pids,
-          client_mutation_id: "0",
+          client_mutation_id: Math.round(Math.random() * 1024).toString(),
           thread_settings: {
             name: groupTitle,
             joinable_mode: "PRIVATE",

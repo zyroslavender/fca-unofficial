@@ -37,6 +37,7 @@ module.exports = function(defaultFuncs, api, ctx) {
     // Set fields for options (and whether they are selected initially by the posting user)
     var ind = 0;
     for (var opt in options) {
+      // eslint-disable-next-line no-prototype-builtins
       if (options.hasOwnProperty(opt)) {
         form["option_text_array[" + ind + "]"] = opt;
         form["option_is_selected_array[" + ind + "]"] = options[opt]

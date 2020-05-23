@@ -140,6 +140,7 @@ function buildAPI(globalOptions, html, jar) {
     'addUserToGroup',
     'changeAdminStatus',
     'changeArchivedStatus',
+    'changeBio',
     'changeBlockedStatus',
     'changeGroupImage',
     'changeNickname',
@@ -182,7 +183,6 @@ function buildAPI(globalOptions, html, jar) {
     'httpPost',
 
     // Deprecated features
-    'listen',
     "getThreadListDeprecated",
     'getThreadHistoryDeprecated',
     'getThreadInfoDeprecated',
@@ -194,6 +194,10 @@ function buildAPI(globalOptions, html, jar) {
   apiFuncNames.map(function(v) {
     api[v] = require('./src/' + v)(defaultFuncs, api, ctx);
   });
+
+  //Removing original `listen` that uses pull.
+  //Map it to listenMqtt instead for backward compatibly.
+  api.listen = api.listenMqtt;
 
   return [ctx, defaultFuncs, api];
 }
