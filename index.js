@@ -284,10 +284,10 @@ function makeLogin(jar, email, password, loginOptions, callback, prCallback) {
                     .then(utils.saveCookies(jar))
                     .then(res => {
                       try {
-                        JSON.parse(res.replace(/for\s*\(\s*;\s*;\s*\)\s*;\s*/, ""));
+                        JSON.parse(res.body.replace(/for\s*\(\s*;\s*;\s*\)\s*;\s*/, ""));
                       } catch (ex) {
                         clearInterval(checkVerified);
-                        log.info("login", "Verified from another browser. Logging in...");
+                        log.info("login", "Verified from browser. Logging in...");
                         return loginHelper(utils.getAppState(jar), email, password, loginOptions, callback);
                       }
                     })
