@@ -65,7 +65,7 @@ function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
   if (ctx.mqttEndpoint) {
     host = `${ctx.mqttEndpoint}&sid=${sessionID}`;
   } else if (ctx.region) {
-    host = `wss://edge-chat.facebook.com/chat?region=${ctx.region.toLocaleLowerCase()}&sid=${sessionID}`
+    host = `wss://edge-chat.facebook.com/chat?region=${ctx.region.toLocaleLowerCase()}&sid=${sessionID}`;
   } else {
     host = `wss://edge-chat.facebook.com/chat?sid=${sessionID}`;
   }
@@ -702,7 +702,7 @@ module.exports = function (defaultFuncs, api, ctx) {
       "av": ctx.globalOptions.pageID,
       "queries": JSON.stringify({
         "o0": {
-          "doc_id": "1349387578499440",
+          "doc_id": "3253745841302430",
           "query_params": {
             "limit": 1,
             "before": null,

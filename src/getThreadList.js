@@ -189,8 +189,8 @@ module.exports = function(defaultFuncs, api, ctx) {
       "av": ctx.globalOptions.pageID,
       "queries": JSON.stringify({
         "o0": {
-          // This doc_id was valid on 2018-04-04.
-          "doc_id": "1349387578499440",
+          // This doc_id was valid on 2020-05-26 (1349387578499440 on 2018-04-04).
+          "doc_id": "3253745841302430",
           "query_params": {
             "limit": limit+(timestamp?1:0),
             "before": timestamp,
