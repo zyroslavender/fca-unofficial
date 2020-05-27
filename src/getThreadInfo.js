@@ -58,7 +58,8 @@ function formatThreadGraphQLResponse(data) {
     threadID: threadID,
     threadName: messageThread.name,
     participantIDs: messageThread.all_participants.edges.map(function(d) {
-      return d.messaging_actor.id;
+      //Debugged with an Android phone and commited changes with an iPhone 5s. kill me tks - UIRI 2020
+      return d.node.messaging_actor.id;
     }),
     unreadCount: messageThread.unread_count,
     messageCount: messageThread.messages_count,
