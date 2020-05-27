@@ -92,6 +92,7 @@ function formatThreadGraphQLResponse(data) {
           )
         : {},
     adminIDs: messageThread.thread_admins,
+    approvalMode: Boolean(messageThread.approval_mode),
 
     // @Undocumented
     topEmojis: messageThread.top_emojis,
@@ -145,8 +146,8 @@ module.exports = function(defaultFuncs, api, ctx) {
     var form = {
       queries: JSON.stringify({
         o0: {
-          // This doc_id is valid as of February 1st, 2018.
-          doc_id: "1498317363570230",
+          // This doc_id is valid as of May 27, 2020 (February 1st, 2018? 1498317363570230).
+          doc_id: "2647524395352386",
           query_params: {
             id: threadID,
             message_limit: 0,

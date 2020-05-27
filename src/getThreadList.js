@@ -9,8 +9,8 @@ function createProfileUrl(url, username, id) {
 }
 
 function formatParticipants(participants) {
-  return participants.nodes.map((p)=>{
-    p = p.messaging_actor;
+  return participants.edges.map((p)=>{
+    p = p.node.messaging_actor;
     switch (p["__typename"]) {
       case "User":
         return {
@@ -141,6 +141,7 @@ function formatThreadList(data) {
                          ? (t.last_read_receipt.nodes[0]?t.last_read_receipt.nodes[0].timestamp_precise:null)
                          : null, // timestamp in miliseconds
       cannotReplyReason: t.cannot_reply_reason, // TODO: inspect possible values
+      approvalMode: Boolean(t.approval_mode),
 
       // @Legacy
       participantIDs: formatParticipants(t.all_participants).map(participant => participant.userID),
