@@ -87,7 +87,8 @@ function formatColor(color) {
 function getThreadName(t) {
   if (t.name || t.thread_key.thread_fbid) return t.name;
 
-  for (let p of t.all_participants.nodes) {
+  for (let po of t.all_participants.edges) {
+    let p = po.node;
     if (p.messaging_actor.id === t.thread_key.other_user_id) return p.messaging_actor.name;
   }
 }

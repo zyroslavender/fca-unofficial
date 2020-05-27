@@ -57,7 +57,7 @@ function formatThreadGraphQLResponse(data) {
   return {
     threadID: threadID,
     threadName: messageThread.name,
-    participantIDs: messageThread.all_participants.nodes.map(function(d) {
+    participantIDs: messageThread.all_participants.edges.map(function(d) {
       return d.messaging_actor.id;
     }),
     unreadCount: messageThread.unread_count,
