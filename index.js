@@ -137,6 +137,7 @@ function buildAPI(globalOptions, html, jar) {
   }
   
   const apiFuncNames = [
+    'addExternalModule',
     'addUserToGroup',
     'changeAdminStatus',
     'changeArchivedStatus',
