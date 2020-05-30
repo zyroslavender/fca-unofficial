@@ -131,6 +131,7 @@ function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
     }
 
     mqttClient.publish(topic, JSON.stringify(queue), { qos: 1, retain: false });
+    globalCallback("LISTEN OK");
   });
 
   mqttClient.on('message', function (topic, message, _packet) {
