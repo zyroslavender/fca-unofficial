@@ -1635,6 +1635,8 @@ __Supported Emojis__
 |😠|`😠`|`\uD83D\uDE20`|`:angry:`|
 |👍|`👍`|`\uD83D\uDC4D`|`:like:`, `:thumbsup:`|
 |👎|`👎`|`\uD83D\uDC4E`|`:dislike:`, `:thumbsdown:`|
+|❤|`❤`|`\u2764`|`:heart:`|
+|💗|`💗`|`\uD83D\uDC97`|`:glowingheart:`|
 
 ---------------------------------------
 
