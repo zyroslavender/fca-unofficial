@@ -631,7 +631,7 @@ __Arguments__
 | unreadCount | Number of unread messages |
 | messageCount | Number of messages |
 | imageSrc | URL to the group chat photo. Null if unset or a 1-1 thread. |
-| timestamp |  |
+| timestamp | Timestamp of last activity |
 | muteUntil | Timestamp at which the thread will no longer be muted. The timestamp will be -1 if the thread is muted indefinitely or null if the thread is not muted. |
 | isGroup | boolean, true if this thread is a group thread (more than 2 participants). |
 | isSubscribed |  |
@@ -642,6 +642,7 @@ __Arguments__
 | emoji | Object with key 'emoji' whose value is the emoji unicode character. Null if unset. |
 | color | String form of the custom color in hexadecimal form. |
 | adminIDs | Array of user IDs of the admins of the thread. Empty array if unset. |
+| approvalMode | `true` or `false`, used to check if this group requires admin approval to add users |
 
 ---------------------------------------
 
@@ -698,6 +699,7 @@ __Thread list__
 | lastMessageTimestamp | timestamp in milliseconds                                   |
 | lastReadTimestamp    | timestamp in milliseconds or `null`                         |
 | cannotReplyReason    | `null`, `"RECIPIENTS_NOT_LOADABLE"` or `"BLOCKED"`          |
+| approvalMode         | `true` or `false`, used to check if this group requires admin approval to add users |
 
 __`participants` format__
 
