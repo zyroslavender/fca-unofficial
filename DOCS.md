@@ -1010,10 +1010,14 @@ __Arguments__
 ---------------------------------------
 
 <a name="listen"></a>
-### api.listen(callback) (**deprecated, use `api.listenMqtt` instead**)
+### api.listen([callback])
+<a name="listenMqtt"></a>
+### api.listenMqtt([callback])
 
 Will call `callback` when a new message is received on this account.
-By default this won't receive events (joining/leaving a chat, title change etc...) but it can be activated with `api.setOptions({listenEvents: true})`.  This will by default ignore messages sent by the current account, you can enable listening to your own messages with `api.setOptions({selfListen: true})`. This returns `stopListening` that will stop the `listen` loop and is guaranteed to prevent any future calls to the callback given to `listen`. An immediate call to `stopListening` when an error occurs will prevent the listen function to continue.
+By default this won't receive events (joining/leaving a chat, title change etc...) but it can be activated with `api.setOptions({listenEvents: true})`.  This will by default ignore messages sent by the current account, you can enable listening to your own messages with `api.setOptions({selfListen: true})`. This returns an `EventEmitter` that contains function `stopListening` that will stop the `listen` loop and is guaranteed to prevent any future calls to the callback given to `listen`. An immediate call to `stopListening` when an error occurs will prevent the listen function to continue.
+
+If `callback` is not defined, or isn't a `Function`, you can listen to messages with event `message` and `error` from `EventEmitter` returned by this function.
 
 __Arguments__
 
@@ -1073,7 +1077,7 @@ The message object will contain different fields based on its type (as determine
 	<tr>
 		<td rowspan="6">
 			<code>"event"</code><br />
-			An event occurred within a thread. Note that receiving this event type needs to be enabled with api.setOptions({ listenEvents: true })
+			An event occurred within a thread. Note that receiving this event type needs to be enabled with `api.setOptions({ listenEvents: true })`
 		</td>
 		<td><code>author</code></td>
 		<td>The person who performed the event.</td>
@@ -1101,8 +1105,7 @@ The message object will contain different fields based on its type (as determine
 	<tr>
 		<td rowspan="5">
 			<code>"typ"</code><br />
-			A user in a thread is typing. Note that receiving this event type needs to be enabled with api.setOptions({ listenTyping: true })
-			
+			A user in a thread is typing. Note that receiving this event type needs to be enabled with `api.setOptions({ listenTyping: true })`
 		</td>
 		<td><code>from</code></td>
 		<td>ID of the user who started/stopped typing.</td>
@@ -1313,14 +1316,14 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
 
     api.setOptions({listenEvents: true});
 
-    var stopListening = api.listen((err, event) => {
+    var listenEmitter = api.listen((err, event) => {
         if(err) return console.error(err);
 
-        switch(event.type) {
+        switch (event.type) {
             case "message":
                 if(event.body === '/stop') {
                     api.sendMessage("Goodbye...", event.threadID);
-                    return stopListening();
+                    return listenEmitter.stopListening();
                 }
                 api.markAsRead(event.threadID, (err) => {
                     if(err) console.log(err);
@@ -1334,22 +1337,6 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
     });
 });
 ```
-
----------------------------------------
-
-<a name="listenMqtt"></a>
-### api.listenMqtt(callback)
-Same as [`api.listen`](#listen) but uses MQTT to recieve data.
-
-Will call `callback` when a new message is received on this account.
-By default this won't receive events (joining/leaving a chat, title change etc...) but it can be activated with `api.setOptions({listenEvents: true})`.  This will by default ignore messages sent by the current account, you can enable listening to your own messages with `api.setOptions({selfListen: true})`. This returns `stopListening` that will stop the `listen` loop and is guaranteed to prevent any future calls to the callback given to `listenMqtt`. An immediate call to `stopListening` when an error occurs will prevent the listen function to continue.
-
-
-__Arguments__
-
-- `callback(error, message)`: A callback called every time the logged-in account receives a new message.
-
-Messages and Events are the same as [`api.listen`](#listen)
 
 ---------------------------------------
 
