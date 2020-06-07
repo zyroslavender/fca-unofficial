@@ -147,17 +147,20 @@ module.exports = function(defaultFuncs, api, ctx) {
     var form = {
       queries: JSON.stringify({
         o0: {
-          // This doc_id is valid as of May 27, 2020 (February 1st, 2018? 1498317363570230).
-          doc_id: "2647524395352386",
+          // This doc_id is valid as of June 7th, 2020
+          // doc_id from May 27th, 2020: 2647524395352386
+          // doc_id from February 1st, 2018: 1498317363570230
+          doc_id: "2925954077452480",
           query_params: {
             id: threadID,
             message_limit: 0,
-            load_messages: 0,
+            load_messages: false,
             load_read_receipts: false,
             before: null
           }
         }
-      })
+      }),
+      batch_name: "MessengerGraphQLThreadFetcher"
     };
 
     defaultFuncs
