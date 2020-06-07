@@ -191,8 +191,8 @@ module.exports = function(defaultFuncs, api, ctx) {
       "av": ctx.globalOptions.pageID,
       "queries": JSON.stringify({
         "o0": {
-          // This doc_id was valid on 2020-05-26 (1349387578499440 on 2018-04-04).
-          "doc_id": "3253745841302430",
+          // This doc_id was valid on 2020-06-07 (3253745841302430 on 2020-05-26) (1349387578499440 on 2018-04-04).
+          "doc_id": "3129882290383387",
           "query_params": {
             "limit": limit+(timestamp?1:0),
             "before": timestamp,
@@ -201,7 +201,8 @@ module.exports = function(defaultFuncs, api, ctx) {
             "includeSeqID": false
           }
         }
-      })
+      }),
+      "batch_name": "MessengerGraphQLThreadlistFetcher"
     };
 
     defaultFuncs
