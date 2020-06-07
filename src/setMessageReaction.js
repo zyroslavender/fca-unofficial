@@ -4,7 +4,7 @@ var utils = require("../utils");
 var log = require("npmlog");
 
 module.exports = function(defaultFuncs, api, ctx) {
-  return function setMessageReaction(reaction, messageID, callback) {
+  return function setMessageReaction(reaction, messageID, callback, forceCustomReaction) {
     if (!callback) {
       callback = function() {};
     }
@@ -17,6 +17,8 @@ module.exports = function(defaultFuncs, api, ctx) {
       case "\uD83D\uDE20": //:angry:
       case "\uD83D\uDC4D": //:thumbsup:
       case "\uD83D\uDC4E": //:thumbsdown:
+      case "\u2764": //:heart:
+      case "\uD83D\uDC97": //:glowingheart:
       case "":
         //valid
         break;
@@ -47,8 +49,14 @@ module.exports = function(defaultFuncs, api, ctx) {
       case ":dislike:":
         reaction = "\uD83D\uDC4E";
         break;
+      case ":heart:":
+        reaction = "\u2764";
+        break;
+      case ":glowingheart:":
+        reaction = "\uD83D\uDC97";
+        break;
       default:
-        return callback({ error: "Reaction is not a valid emoji." });
+        forceCustomReaction ? break : return callback({ error: "Reaction is not a valid emoji." });
     }
 
     var variables = {

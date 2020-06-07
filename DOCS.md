@@ -1614,7 +1614,7 @@ __Arguments__
 ---------------------------------------
 
 <a name="setMessageReaction"></a>
-### api.setMessageReaction(reaction, messageID[, callback])
+### api.setMessageReaction(reaction, messageID[, callback[, forceCustomReaction]])
 
 Sets reaction on message
 
@@ -1622,7 +1622,8 @@ __Arguments__
 
 * `reaction`: A string containing either an emoji, an emoji in unicode, or an emoji shortcut (see list of supported emojis below). The string can be left empty ("") in order to remove a reaction.
 * `messageID`: A string representing the message ID.
-* `callback(err)` - A callback called when sending the reaction is done.
+* `callback(err)`: A callback called when sending the reaction is done.
+* `forceCustomReaction`: Forcing the use of an emoji for setting reaction **(WARNING: NOT TESTED, YOU SHOULD NOT USE THIS AT ALL, UNLESS YOU'RE TESTING A NEW EMOJI)**
 
 __Supported Emojis__
 
@@ -1635,6 +1636,8 @@ __Supported Emojis__
 |😠|`😠`|`\uD83D\uDE20`|`:angry:`|
 |👍|`👍`|`\uD83D\uDC4D`|`:like:`, `:thumbsup:`|
 |👎|`👎`|`\uD83D\uDC4E`|`:dislike:`, `:thumbsdown:`|
+|❤|`❤`|`\u2764`|`:heart:`|
+|💗|`💗`|`\uD83D\uDC97`|`:glowingheart:`|
 
 ---------------------------------------
 
