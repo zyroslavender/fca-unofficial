@@ -17,7 +17,7 @@ function setProxy(url) {
   }));
 }
 
-function getHeaders(url, options, ctx) {
+function getHeaders(url, options, ctx, customHeader) {
   var headers = {
     "Content-Type": "application/x-www-form-urlencoded",
     Referer: "https://www.facebook.com/",
@@ -26,6 +26,9 @@ function getHeaders(url, options, ctx) {
     "User-Agent": options.userAgent,
     Connection: "keep-alive"
   };
+  if (customHeader) {
+    Object.assign(headers, customHeader);
+  }
   if (ctx && ctx.region) {
     headers["X-MSGR-Region"] = ctx.region;
   }
@@ -66,9 +69,9 @@ function get(url, jar, qs, options, ctx) {
   });
 }
 
-function post(url, jar, form, options, ctx) {
+function post(url, jar, form, options, ctx, customHeader) {
   var op = {
-    headers: getHeaders(url, options, ctx),
+    headers: getHeaders(url, options, ctx, customHeader),
     timeout: 60000,
     url: url,
     method: "POST",

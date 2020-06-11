@@ -10,7 +10,7 @@ var defaultLogRecordSize = 100;
 log.maxRecordSize = defaultLogRecordSize;
 
 function setOptions(globalOptions, options) {
-  Object.keys(options).map(function(key) {
+  Object.keys(options).map(function (key) {
     switch (key) {
       case 'online':
         globalOptions.online = Boolean(options.online);
@@ -67,12 +67,12 @@ function setOptions(globalOptions, options) {
 }
 
 function buildAPI(globalOptions, html, jar) {
-  var maybeCookie = jar.getCookies("https://www.facebook.com").filter(function(val) {
+  var maybeCookie = jar.getCookies("https://www.facebook.com").filter(function (val) {
     return val.cookieString().split("=")[0] === "c_user";
   });
 
-  if(maybeCookie.length === 0) {
-    throw {error: "Error retrieving userID. This can be caused by a lot of things, including getting blocked by Facebook for logging in from an unknown location. Try logging in with a browser to verify."};
+  if (maybeCookie.length === 0) {
+    throw { error: "Error retrieving userID. This can be caused by a lot of things, including getting blocked by Facebook for logging in from an unknown location. Try logging in with a browser to verify." };
   }
 
   if (html.indexOf("/checkpoint/block/?next") > -1) {
@@ -84,7 +84,7 @@ function buildAPI(globalOptions, html, jar) {
 
   try {
     clearInterval(checkVerified);
-  } catch (_) {}
+  } catch (_) { }
 
   var clientID = (Math.random() * 2147483648 | 0).toString(16);
 
@@ -135,7 +135,7 @@ function buildAPI(globalOptions, html, jar) {
   if (noMqttData) {
     api["htmlData"] = noMqttData;
   }
-  
+
   const apiFuncNames = [
     'addExternalModule',
     'addUserToGroup',
@@ -192,7 +192,7 @@ function buildAPI(globalOptions, html, jar) {
   var defaultFuncs = utils.makeDefaults(html, userID, ctx);
 
   // Load all api functions in a loop
-  apiFuncNames.map(function(v) {
+  apiFuncNames.map(function (v) {
     api[v] = require('./src/' + v)(defaultFuncs, api, ctx);
   });
 
@@ -204,17 +204,17 @@ function buildAPI(globalOptions, html, jar) {
 }
 
 function makeLogin(jar, email, password, loginOptions, callback, prCallback) {
-  return function(res) {
+  return function (res) {
     var html = res.body;
     var $ = cheerio.load(html);
     var arr = [];
 
     // This will be empty, but just to be sure we leave it
-    $("#login_form input").map(function(i, v){
-      arr.push({val: $(v).val(), name: $(v).attr("name")});
+    $("#login_form input").map(function (i, v) {
+      arr.push({ val: $(v).val(), name: $(v).attr("name") });
     });
 
-    arr = arr.filter(function(v) {
+    arr = arr.filter(function (v) {
       return v.val && v.val.length;
     });
 
@@ -240,7 +240,7 @@ function makeLogin(jar, email, password, loginOptions, callback, prCallback) {
     //
     // ---------- Very Hacky Part Starts -----------------
     var willBeCookies = html.split("\"_js_");
-    willBeCookies.slice(1).map(function(val) {
+    willBeCookies.slice(1).map(function (val) {
       var cookieData = JSON.parse("[\"" + utils.getFrom(val, "", "]") + "]");
       jar.setCookie(utils.formatCookie(cookieData, "facebook"), "https://www.facebook.com");
     });
@@ -250,7 +250,7 @@ function makeLogin(jar, email, password, loginOptions, callback, prCallback) {
     return utils
       .post("https://www.facebook.com/login/device-based/regular/login/?login_attempt=1&lwv=110", jar, form, loginOptions)
       .then(utils.saveCookies(jar))
-      .then(function(res) {
+      .then(function (res) {
         var headers = res.headers;
         if (!headers.location) {
           throw { error: "Wrong username/password." };
@@ -264,41 +264,49 @@ function makeLogin(jar, email, password, loginOptions, callback, prCallback) {
           return utils
             .get(headers.location, jar, null, loginOptions)
             .then(utils.saveCookies(jar))
-            .then(function(res) {
+            .then(function (res) {
               var html = res.body;
               // Make the form in advance which will contain the fb_dtsg and nh
               var $ = cheerio.load(html);
               var arr = [];
-              $("form input").map(function(i, v){
-                arr.push({val: $(v).val(), name: $(v).attr("name")});
+              $("form input").map(function (i, v) {
+                arr.push({ val: $(v).val(), name: $(v).attr("name") });
               });
 
-              arr = arr.filter(function(v) {
+              arr = arr.filter(function (v) {
                 return v.val && v.val.length;
               });
 
               var form = utils.arrToForm(arr);
               if (html.indexOf("checkpoint/?next") > -1) {
-                checkVerified = setInterval(() => {
-                  utils
-                    .post(nextURL, jar, form, loginOptions)
-                    .then(utils.saveCookies(jar))
-                    .then(res => {
-                      try {
-                        JSON.parse(res.body.replace(/for\s*\(\s*;\s*;\s*\)\s*;\s*/, ""));
-                      } catch (ex) {
-                        clearInterval(checkVerified);
-                        log.info("login", "Verified from browser. Logging in...");
-                        return loginHelper(utils.getAppState(jar), email, password, loginOptions, callback);
-                      }
-                    })
-                    .catch(ex => {
-                      log.error("login", ex);
-                    });
-                }, 5500);
+                setTimeout(() => {
+                  checkVerified = setInterval((form) => {
+                    utils
+                      .post("https://www.facebook.com/login/approvals/approved_machine_check/", jar, form, loginOptions, null, {
+                        "Referer": "https://www.facebook.com/checkpoint/?next"
+                      })
+                      .then(utils.saveCookies(jar))
+                      .then(res => {
+                        try {
+                          JSON.parse(res.body.replace(/for\s*\(\s*;\s*;\s*\)\s*;\s*/, ""));
+                        } catch (ex) {
+                          clearInterval(checkVerified);
+                          log.info("login", "Verified from browser. Logging in...");
+                          return loginHelper(utils.getAppState(jar), email, password, loginOptions, callback);
+                        }
+                      })
+                      .catch(ex => {
+                        log.error("login", ex);
+                      });
+                  }, 5000, {
+                    fb_dtsg: form.fb_dtsg,
+                    jazoest: form.jazoest,
+                    dpr: 1
+                  });
+                }, 2500);
                 throw {
                   error: 'login-approval',
-                  continue: function (code) {
+                  continue: function submit2FA(code) {
                     form.approvals_code = code;
                     form['submit[Continue]'] = $("#checkpointSubmitButton").html(); //'Continue';
                     var prResolve = null;
@@ -307,26 +315,64 @@ function makeLogin(jar, email, password, loginOptions, callback, prCallback) {
                       prResolve = resolve;
                       prReject = reject;
                     });
-                    utils
-                      .post(nextURL, jar, form, loginOptions)
-                      .then(utils.saveCookies(jar))
-                      .then(function() {
-                        // Use the same form (safe I hope)
-                        form.name_action_selected = 'save_device';
+                    if (code) {
+                      utils
+                        .post(nextURL, jar, form, loginOptions)
+                        .then(utils.saveCookies(jar))
+                        .then(function (res) {
+                          var $ = cheerio.load(res.body);
+                          var error = $("#approvals_code").parent().attr("data-xui-error");
+                          if (error) {
+                            throw {
+                              error: 'login-approval',
+                              errordesc: "Invalid 2FA code.",
+                              lerror: error,
+                              continue: submit2FA
+                            };
+                          }
+                        })
+                        .then(function () {
+                          // Use the same form (safe I hope)
+                          delete form.no_fido;
+                          delete form.approvals_code;
+                          form.name_action_selected = 'dont_save'; //'save_device';
 
-                        return utils
-                          .post(nextURL, jar, form, loginOptions)
-                          .then(utils.saveCookies(jar));
-                      })
-                      .then(function(res) {
-                        var headers = res.headers;
-                        if (!headers.location && res.body.indexOf('Review Recent Login') > -1) {
-                          throw {error: "Something went wrong with login approvals."};
-                        }
+                          return utils
+                            .post(nextURL, jar, form, loginOptions)
+                            .then(utils.saveCookies(jar));
+                        })
+                        .then(function (res) {
+                          var headers = res.headers;
+                          if (!headers.location && res.body.indexOf('Review Recent Login') > -1) {
+                            throw { error: "Something went wrong with login approvals." };
+                          }
 
+                          var appState = utils.getAppState(jar);
+
+                          if (callback === prCallback) {
+                            callback = function (err, api) {
+                              if (err) {
+                                return prReject(err);
+                              }
+                              return prResolve(api);
+                            };
+                          }
+
+                          // Simply call loginHelper because all it needs is the jar
+                          // and will then complete the login process
+                          return loginHelper(appState, email, password, loginOptions, callback);
+                        })
+                        .catch(function (err) {
+                          // Check if using Promise instead of callback
+                          if (callback === prCallback) {
+                            prReject(err);
+                          } else {
+                            callback(err);
+                          }
+                        });
+                    } else {
+                      try {
                         var appState = utils.getAppState(jar);
-
-                        // Check if using Promise instead of callback
                         if (callback === prCallback) {
                           callback = function (err, api) {
                             if (err) {
@@ -335,25 +381,21 @@ function makeLogin(jar, email, password, loginOptions, callback, prCallback) {
                             return prResolve(api);
                           };
                         }
-
-                        // Simply call loginHelper because all it needs is the jar
-                        // and will then complete the login process
-                        return loginHelper(appState, email, password, loginOptions, callback);
-                      })
-                      .catch(function(err) {
-                        // Check if using Promise instead of callback
+                        loginHelper(appState, email, password, loginOptions, callback);
+                      } catch (err) {
                         if (callback === prCallback) {
                           prReject(err);
                         } else {
                           callback(err);
                         }
-                      });
+                      }
+                    }
                     return rtPromise;
                   }
                 };
               } else {
                 if (!loginOptions.forceLogin) {
-                  throw {error: "Couldn't login. Facebook might have blocked this account. Please login with a browser or enable the option 'forceLogin' and try again."};
+                  throw { error: "Couldn't login. Facebook might have blocked this account. Please login with a browser or enable the option 'forceLogin' and try again." };
                 }
                 if (html.indexOf("Suspicious Login Attempt") > -1) {
                   form['submit[This was me]'] = "This was me";
@@ -364,7 +406,7 @@ function makeLogin(jar, email, password, loginOptions, callback, prCallback) {
                 return utils
                   .post(nextURL, jar, form, loginOptions)
                   .then(utils.saveCookies(jar))
-                  .then(function() {
+                  .then(function () {
                     // Use the same form (safe I hope)
                     form.name_action_selected = 'save_device';
 
@@ -372,11 +414,11 @@ function makeLogin(jar, email, password, loginOptions, callback, prCallback) {
                       .post(nextURL, jar, form, loginOptions)
                       .then(utils.saveCookies(jar));
                   })
-                  .then(function(res) {
+                  .then(function (res) {
                     var headers = res.headers;
 
                     if (!headers.location && res.body.indexOf('Review Recent Login') > -1) {
-                      throw {error: "Something went wrong with review recent login."};
+                      throw { error: "Something went wrong with review recent login." };
                     }
 
                     var appState = utils.getAppState(jar);
@@ -385,7 +427,7 @@ function makeLogin(jar, email, password, loginOptions, callback, prCallback) {
                     // and will then complete the login process
                     return loginHelper(appState, email, password, loginOptions, callback);
                   })
-                  .catch(function(e) {
+                  .catch(function (e) {
                     callback(e);
                   });
               }
@@ -400,14 +442,14 @@ function makeLogin(jar, email, password, loginOptions, callback, prCallback) {
 }
 
 // Helps the login
-function loginHelper(appState, email, password, globalOptions, callback) {
+function loginHelper(appState, email, password, globalOptions, callback, prCallback) {
   var mainPromise = null;
   var jar = utils.getJar();
 
   // If we're given an appState we loop through it and save each cookie
   // back into the jar.
-  if(appState) {
-    appState.map(function(c) {
+  if (appState) {
+    appState.map(function (c) {
       var str = c.key + "=" + c.value + "; expires=" + c.expires + "; domain=" + c.domain + "; path=" + c.path + ";";
       jar.setCookie(str, "http://" + c.domain);
     });
@@ -422,8 +464,8 @@ function loginHelper(appState, email, password, globalOptions, callback) {
     mainPromise = utils
       .get("https://www.facebook.com/", null, null, globalOptions)
       .then(utils.saveCookies(jar))
-      .then(makeLogin(jar, email, password, globalOptions, callback))
-      .then(function() {
+      .then(makeLogin(jar, email, password, globalOptions, callback, prCallback))
+      .then(function () {
         return utils
           .get('https://www.facebook.com/', jar, null, globalOptions)
           .then(utils.saveCookies(jar));
@@ -435,7 +477,7 @@ function loginHelper(appState, email, password, globalOptions, callback) {
   var api = null;
 
   mainPromise = mainPromise
-    .then(function(res) {
+    .then(function (res) {
       // Hacky check for the redirection that happens on some ISPs, which doesn't return statusCode 3xx
       var reg = /<meta http-equiv="refresh" content="0;url=([^"]+)[^>]+>/;
       var redirect = reg.exec(res.body);
@@ -446,7 +488,7 @@ function loginHelper(appState, email, password, globalOptions, callback) {
       }
       return res;
     })
-    .then(function(res) {
+    .then(function (res) {
       var html = res.body;
       var stuff = buildAPI(globalOptions, html, jar);
       ctx = stuff[0];
@@ -458,11 +500,11 @@ function loginHelper(appState, email, password, globalOptions, callback) {
   // given a pageID we log in as a page
   if (globalOptions.pageID) {
     mainPromise = mainPromise
-      .then(function() {
+      .then(function () {
         return utils
           .get('https://www.facebook.com/' + ctx.globalOptions.pageID + '/messages/?section=messages&subsection=inbox', ctx.jar, null, globalOptions);
       })
-      .then(function(resData) {
+      .then(function (resData) {
         var url = utils.getFrom(resData.body, 'window.location.replace("https:\\/\\/www.facebook.com\\', '");').split('\\').join('');
         url = url.substring(0, url.length - 1);
 
@@ -473,18 +515,18 @@ function loginHelper(appState, email, password, globalOptions, callback) {
 
   // At the end we call the callback or catch an exception
   mainPromise
-    .then(function() {
+    .then(function () {
       log.info("login", 'Done logging in.');
       return callback(null, api);
     })
-    .catch(function(e) {
+    .catch(function (e) {
       log.error("login", e.error || e);
       callback(e);
     });
 }
 
 function login(loginData, options, callback) {
-  if(utils.getType(options) === 'Function' || utils.getType(options) === 'AsyncFunction') {
+  if (utils.getType(options) === 'Function' || utils.getType(options) === 'AsyncFunction') {
     callback = options;
     options = {};
   }
