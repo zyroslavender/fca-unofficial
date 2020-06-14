@@ -24,31 +24,31 @@ function setOptions(globalOptions, options) {
         globalOptions.logRecordSize = options.logRecordSize;
         break;
       case 'selfListen':
-        globalOptions.selfListen = options.selfListen;
+        globalOptions.selfListen = Boolean(options.selfListen);
         break;
       case 'listenEvents':
-        globalOptions.listenEvents = options.listenEvents;
+        globalOptions.listenEvents = Boolean(options.listenEvents);
         break;
       case 'pageID':
         globalOptions.pageID = options.pageID.toString();
         break;
       case 'updatePresence':
-        globalOptions.updatePresence = options.updatePresence;
+        globalOptions.updatePresence = Boolean(options.updatePresence);
         break;
       case 'forceLogin':
-        globalOptions.forceLogin = options.forceLogin;
+        globalOptions.forceLogin = Boolean(options.forceLogin);
         break;
       case 'userAgent':
         globalOptions.userAgent = options.userAgent;
         break;
       case 'autoMarkDelivery':
-        globalOptions.autoMarkDelivery = options.autoMarkDelivery;
+        globalOptions.autoMarkDelivery = Boolean(options.autoMarkDelivery);
         break;
       case 'autoMarkRead':
-        globalOptions.autoMarkRead = options.autoMarkRead;
+        globalOptions.autoMarkRead = Boolean(options.autoMarkRead);
         break;
       case 'listenTyping':
-        globalOptions.listenTyping = options.listenTyping;
+        globalOptions.listenTyping = Boolean(options.listenTyping);
         break;
       case 'proxy':
         if (typeof options.proxy != "string") {
@@ -58,6 +58,9 @@ function setOptions(globalOptions, options) {
           globalOptions.proxy = options.proxy;
           utils.setProxy(globalOptions.proxy);
         }
+        break;
+      case 'autoReconnect':
+        globalOptions.autoReconnect = Boolean(options.autoReconnect);
         break;
       default:
         log.warn("setOptions", "Unrecognized option given to setOptions: " + key);
@@ -539,6 +542,7 @@ function login(loginData, options, callback) {
     forceLogin: false,
     autoMarkDelivery: true,
     autoMarkRead: false,
+    autoReconnect: true,
     logRecordSize: defaultLogRecordSize,
     online: true,
     userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/600.3.18 (KHTML, like Gecko) Version/8.0.3 Safari/600.3.18"

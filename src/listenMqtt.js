@@ -8,6 +8,9 @@ var HttpsProxyAgent = require('https-proxy-agent');
 const EventEmitter = require('events');
 
 var identity = function () { };
+var t_mqttCalled = false;
+var form = {};
+var getSeqID = function () { };
 
 var topics = [
   "/legacy_web",
@@ -103,7 +106,14 @@ function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
   mqttClient.on('error', function (err) {
     log.error("listenMqtt", err);
     mqttClient.end();
-    globalCallback("Connection refused: Server unavailable", null);
+    if (ctx.globalOptions.autoReconnect) {
+      getSeqID();
+    } else {
+      globalCallback({
+        type: "stop_listen",
+        error: "Connection refused: Server unavailable"
+      }, null);
+    }
   });
 
   mqttClient.on('connect', function () {
@@ -130,8 +140,26 @@ function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
       queue.device_params = null;
     }
 
+    if (t_mqttCalled) {
+      t_mqttCalled = false;
+      mqttClient.end();
+      if (ctx.globalOptions.autoReconnect) {
+        getSeqID();
+      } else {
+        globalCallback({
+          type: "stop_listen",
+          error: "Connection refused: MQTT client reconnection detected."
+        }, null);
+      }
+    } else {
+      t_mqttCalled = true;
+    }
+
     mqttClient.publish(topic, JSON.stringify(queue), { qos: 1, retain: false });
-    globalCallback("LISTEN OK");
+    globalCallback({
+      type: "ready",
+      error: null
+    });
   });
 
   mqttClient.on('message', function (topic, message, _packet) {
@@ -666,11 +694,47 @@ function markDelivery(ctx, api, threadID, messageID) {
 
 module.exports = function (defaultFuncs, api, ctx) {
   var globalCallback = identity;
+  getSeqID = function getSeqID() {
+    defaultFuncs
+      .post("https://www.facebook.com/api/graphqlbatch/", ctx.jar, form)
+      .then(utils.parseAndCheckLogin(ctx, defaultFuncs))
+      .then((resData) => {
+        if (utils.getType(resData) != "Array") {
+          throw {
+            error: "Not logged in",
+            res: resData
+          };
+        }
+
+        if (resData && resData[resData.length - 1].error_results > 0) {
+          throw resData[0].o0.errors;
+        }
+
+        if (resData[resData.length - 1].successful_results === 0) {
+          throw { error: "getSeqId: there was no successful_results", res: resData };
+        }
+
+        if (resData[0].o0.data.viewer.message_threads.sync_sequence_id) {
+          ctx.lastSeqId = resData[0].o0.data.viewer.message_threads.sync_sequence_id;
+          listenMqtt(defaultFuncs, api, ctx, globalCallback);
+        } else {
+          throw { error: "getSeqId: no sync_sequence_id found.", res: resData };
+        }
+      })
+      .catch((err) => {
+        log.error("getSeqId", err);
+        if (utils.getType(err) == "Object" && err.error === "Not logged in") {
+          ctx.loggedIn = false;
+        }
+        return globalCallback(err);
+      });
+  };
+
   return function (callback) {
     var listening = true;
     class MessageEmitter extends EventEmitter {
       stopListening(callback) {
-        callback = callback || (() => {});
+        callback = callback || (() => { });
         globalCallback = identity;
         if (ctx.mqttClient) {
           ctx.mqttClient.unsubscribe("/webrtc");
@@ -699,7 +763,7 @@ module.exports = function (defaultFuncs, api, ctx) {
     ctx.syncToken = undefined;
 
     //Same request as getThreadList
-    const form = {
+    form = {
       "av": ctx.globalOptions.pageID,
       "queries": JSON.stringify({
         "o0": {
@@ -715,56 +779,6 @@ module.exports = function (defaultFuncs, api, ctx) {
       })
     };
 
-    function getSeqID() {
-      defaultFuncs
-        .post("https://www.facebook.com/api/graphqlbatch/", ctx.jar, form)
-        .then(utils.parseAndCheckLogin(ctx, defaultFuncs))
-        .then((resData) => {
-          if (utils.getType(resData) != "Array") {
-            throw {
-              error: "Not logged in",
-              res: resData
-            };
-          }
-
-          if (resData && resData[resData.length - 1].error_results > 0) {
-            throw resData[0].o0.errors;
-          }
-
-          if (resData[resData.length - 1].successful_results === 0) {
-            throw { error: "getSeqId: there was no successful_results", res: resData };
-          }
-
-          if (resData[0].o0.data.viewer.message_threads.sync_sequence_id) {
-            ctx.lastSeqId = resData[0].o0.data.viewer.message_threads.sync_sequence_id;
-            listenMqtt(defaultFuncs, api, ctx, globalCallback);
-            setTimeout(function () {
-              if (listening) {
-                /* mqttClient.end(false, function () {
-                  getSeqID();
-                }); */
-                if (ctx.mqttClient) {
-                  ctx.mqttClient.unsubscribe("/webrtc");
-                  ctx.mqttClient.unsubscribe("/rtc_multi");
-                  ctx.mqttClient.unsubscribe("/onevc");
-                  ctx.mqttClient.publish("/browser_close", "{}");
-                  ctx.mqttClient.end(false);
-                  ctx.mqttClient = undefined;
-                  getSeqID();
-                }
-              }
-            }, 3000000);
-          }
-
-        })
-        .catch((err) => {
-          log.error("getSeqId", err);
-          if (utils.getType(err) == "Object" && err.error === "Not logged in") {
-            ctx.loggedIn = false;
-          }
-          return callback(err);
-        });
-    }
     getSeqID();
     return msgEmitter;
   };
