@@ -8,7 +8,6 @@ var HttpsProxyAgent = require('https-proxy-agent');
 const EventEmitter = require('events');
 
 var identity = function () { };
-var t_mqttCalled = false;
 var form = {};
 var getSeqID = function () { };
 
@@ -107,8 +106,10 @@ function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
     log.error("listenMqtt", err);
     mqttClient.end();
     if (ctx.globalOptions.autoReconnect) {
+      ctx.t_mqttCalled = false;
       getSeqID();
     } else {
+      ctx.t_mqttCalled = false;
       globalCallback({
         type: "stop_listen",
         error: "Connection refused: Server unavailable"
@@ -140,8 +141,8 @@ function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
       queue.device_params = null;
     }
 
-    if (t_mqttCalled) {
-      t_mqttCalled = false;
+    if (ctx.t_mqttCalled) {
+      ctx.t_mqttCalled = false;
       mqttClient.end();
       if (ctx.globalOptions.autoReconnect) {
         getSeqID();
@@ -151,8 +152,9 @@ function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
           error: "Connection refused: MQTT client reconnection detected."
         }, null);
       }
+      return;
     } else {
-      t_mqttCalled = true;
+      ctx.t_mqttCalled = true;
     }
 
     mqttClient.publish(topic, JSON.stringify(queue), { qos: 1, retain: false });
@@ -695,6 +697,7 @@ function markDelivery(ctx, api, threadID, messageID) {
 module.exports = function (defaultFuncs, api, ctx) {
   var globalCallback = identity;
   getSeqID = function getSeqID() {
+    ctx.t_mqttCalled = false;
     defaultFuncs
       .post("https://www.facebook.com/api/graphqlbatch/", ctx.jar, form)
       .then(utils.parseAndCheckLogin(ctx, defaultFuncs))
@@ -761,6 +764,7 @@ module.exports = function (defaultFuncs, api, ctx) {
     //Reset some stuff
     ctx.lastSeqId = 0;
     ctx.syncToken = undefined;
+    ctx.t_mqttCalled = false;
 
     //Same request as getThreadList
     form = {
