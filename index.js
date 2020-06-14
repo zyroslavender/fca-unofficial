@@ -318,7 +318,7 @@ function makeLogin(jar, email, password, loginOptions, callback, prCallback) {
                       prResolve = resolve;
                       prReject = reject;
                     });
-                    if (code) {
+                    if (typeof code == "string") {
                       utils
                         .post(nextURL, jar, form, loginOptions)
                         .then(utils.saveCookies(jar))
@@ -374,24 +374,36 @@ function makeLogin(jar, email, password, loginOptions, callback, prCallback) {
                           }
                         });
                     } else {
-                      try {
-                        var appState = utils.getAppState(jar);
-                        if (callback === prCallback) {
-                          callback = function (err, api) {
-                            if (err) {
-                              return prReject(err);
+                      utils
+                        .post("https://www.facebook.com/login/approvals/approved_machine_check/", jar, form, loginOptions, null, {
+                          "Referer": "https://www.facebook.com/checkpoint/?next"
+                        })
+                        .then(utils.saveCookies(jar))
+                        .then(res => {
+                          try {
+                            JSON.parse(res.body.replace(/for\s*\(\s*;\s*;\s*\)\s*;\s*/, ""));
+                          } catch (ex) {
+                            clearInterval(checkVerified);
+                            log.info("login", "Verified from browser. Logging in...");
+                            if (callback === prCallback) {
+                              callback = function (err, api) {
+                                if (err) {
+                                  return prReject(err);
+                                }
+                                return prResolve(api);
+                              };
                             }
-                            return prResolve(api);
-                          };
-                        }
-                        loginHelper(appState, email, password, loginOptions, callback);
-                      } catch (err) {
-                        if (callback === prCallback) {
-                          prReject(err);
-                        } else {
-                          callback(err);
-                        }
-                      }
+                            return loginHelper(utils.getAppState(jar), email, password, loginOptions, callback);
+                          }
+                        })
+                        .catch(ex => {
+                          log.error("login", ex);
+                          if (callback === prCallback) {
+                            prReject(ex);
+                          } else {
+                            callback(ex);
+                          }
+                        });
                     }
                     return rtPromise;
                   }
