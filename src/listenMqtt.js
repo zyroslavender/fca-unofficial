@@ -402,8 +402,8 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
                 "av": ctx.globalOptions.pageID,
                 "queries": JSON.stringify({
                   "o0": {
-                    //This doc_id is valid as of ? (prob January 18, 2020)
-                    "doc_id": "1768656253222505",
+                    //Using the same doc_id as forcedFetch
+                    "doc_id": "2848441488556444",
                     "query_params": {
                       "thread_and_message_id": {
                         "thread_id": callbackToReturn.threadID,
