@@ -11,10 +11,11 @@ var allowedProperties = {
   emoji: true,
   emojiSize: true,
   body: true,
-  mentions: true
+  mentions: true,
+  location: true,
 };
 
-module.exports = function(defaultFuncs, api, ctx) {
+module.exports = function (defaultFuncs, api, ctx) {
   function uploadAttachment(attachments, callback) {
     var uploads = [];
 
@@ -43,7 +44,7 @@ module.exports = function(defaultFuncs, api, ctx) {
             {}
           )
           .then(utils.parseAndCheckLogin(ctx, defaultFuncs))
-          .then(function(resData) {
+          .then(function (resData) {
             if (resData.error) {
               throw resData;
             }
@@ -58,10 +59,10 @@ module.exports = function(defaultFuncs, api, ctx) {
     // resolve all promises
     bluebird
       .all(uploads)
-      .then(function(resData) {
+      .then(function (resData) {
         callback(null, resData);
       })
-      .catch(function(err) {
+      .catch(function (err) {
         log.error("uploadAttachment", err);
         return callback(err);
       });
@@ -81,7 +82,7 @@ module.exports = function(defaultFuncs, api, ctx) {
         form
       )
       .then(utils.parseAndCheckLogin(ctx, defaultFuncs))
-      .then(function(resData) {
+      .then(function (resData) {
         if (resData.error) {
           return callback(resData);
         }
@@ -92,7 +93,7 @@ module.exports = function(defaultFuncs, api, ctx) {
 
         callback(null, resData.payload.share_data.share_params);
       })
-      .catch(function(err) {
+      .catch(function (err) {
         log.error("getUrl", err);
         return callback(err);
       });
@@ -138,7 +139,7 @@ module.exports = function(defaultFuncs, api, ctx) {
     defaultFuncs
       .post("https://www.facebook.com/messaging/send/", ctx.jar, form)
       .then(utils.parseAndCheckLogin(ctx, defaultFuncs))
-      .then(function(resData) {
+      .then(function (resData) {
         if (!resData) {
           return callback({ error: "Send message failed." });
         }
@@ -148,13 +149,13 @@ module.exports = function(defaultFuncs, api, ctx) {
             log.warn(
               "sendMessage",
               "Got error 1545012. This might mean that you're not part of the conversation " +
-                threadID
+              threadID
             );
           }
           return callback(resData);
         }
 
-        var messageInfo = resData.payload.actions.reduce(function(p, v) {
+        var messageInfo = resData.payload.actions.reduce(function (p, v) {
           return (
             {
               threadID: v.thread_fbid,
@@ -166,7 +167,7 @@ module.exports = function(defaultFuncs, api, ctx) {
 
         return callback(null, messageInfo);
       })
-      .catch(function(err) {
+      .catch(function (err) {
         log.error("sendMessage", err);
         if (utils.getType(err) == "Object" && err.error === "Not logged in.") {
           ctx.loggedIn = false;
@@ -183,7 +184,7 @@ module.exports = function(defaultFuncs, api, ctx) {
       sendContent(form, threadID, false, messageAndOTID, callback);
     } else {
       if (utils.getType(isGroup) != "Boolean") {
-        api.getUserInfo(threadID, function(err, res) {
+        api.getUserInfo(threadID, function (err, res) {
           if (err) {
             return callback(err);
           }
@@ -204,7 +205,7 @@ module.exports = function(defaultFuncs, api, ctx) {
   function handleUrl(msg, form, callback, cb) {
     if (msg.url) {
       form["shareable_attachment[share_type]"] = "100";
-      getUrl(msg.url, function(err, params) {
+      getUrl(msg.url, function (err, params) {
         if (err) {
           return callback(err);
         }
@@ -215,6 +216,20 @@ module.exports = function(defaultFuncs, api, ctx) {
     } else {
       cb();
     }
+  }
+
+  function handleLocation(msg, form, callback, cb) {
+    if (msg.location) {
+      if (msg.location.latitude == null || msg.location.longitude == null) {
+        return callback({ error: "location property needs both latitude and longitude" });
+      }
+
+      form["location_attachment[coordinates][latitude]"] = msg.location.latitude;
+      form["location_attachment[coordinates][longitude]"] = msg.location.longitude;
+      form["location_attachment[is_current_location]"] = !!msg.location.current;
+    }
+
+    cb();
   }
 
   function handleSticker(msg, form, callback, cb) {
@@ -260,12 +275,12 @@ module.exports = function(defaultFuncs, api, ctx) {
         msg.attachment = [msg.attachment];
       }
 
-      uploadAttachment(msg.attachment, function(err, files) {
+      uploadAttachment(msg.attachment, function (err, files) {
         if (err) {
           return callback(err);
         }
 
-        files.forEach(function(file) {
+        files.forEach(function (file) {
           var key = Object.keys(file);
           var type = key[0]; // image_id, file_id, etc
           form["" + type + "s"].push(file[type]); // push the id
@@ -324,11 +339,11 @@ module.exports = function(defaultFuncs, api, ctx) {
       utils.getType(callback) === "String"
     ) {
       replyToMessage = callback;
-      callback = function() {};
+      callback = function () { };
     }
-      
+
     if (!callback) {
-      callback = function() {};
+      callback = function () { };
     }
 
     var msgType = utils.getType(msg);
@@ -355,7 +370,7 @@ module.exports = function(defaultFuncs, api, ctx) {
           "."
       });
     }
-    
+
     if (replyToMessage && messageIDType !== 'String') {
       return callback({
         error:
@@ -413,12 +428,14 @@ module.exports = function(defaultFuncs, api, ctx) {
       replied_to_message_id: replyToMessage
     };
 
-    handleSticker(msg, form, callback, () =>
-      handleAttachment(msg, form, callback, () =>
-        handleUrl(msg, form, callback, () =>
-          handleEmoji(msg, form, callback, () =>
-            handleMention(msg, form, callback, () =>
-              send(form, threadID, messageAndOTID, callback, isGroup)
+    handleLocation(msg, form, callback, () =>
+      handleSticker(msg, form, callback, () =>
+        handleAttachment(msg, form, callback, () =>
+          handleUrl(msg, form, callback, () =>
+            handleEmoji(msg, form, callback, () =>
+              handleMention(msg, form, callback, () =>
+                send(form, threadID, messageAndOTID, callback, isGroup)
+              )
             )
           )
         )
