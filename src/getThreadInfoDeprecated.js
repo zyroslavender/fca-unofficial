@@ -5,7 +5,21 @@ var log = require("npmlog");
 
 module.exports = function(defaultFuncs, api, ctx) {
   return function getThreadInfo(threadID, callback) {
-    if (!callback) callback = function() {};
+    var resolveFunc = function(){};
+    var rejectFunc = function(){};
+    var returnPromise = new Promise(function (resolve, reject) {
+      resolveFunc = resolve;
+      rejectFunc = reject;
+    });
+
+    if (!callback) {
+      callback = function (err, friendList) {
+        if (err) {
+          return rejectFunc(err);
+        }
+        resolveFunc(friendList);
+      };
+    }
 
     var form = {
       client: "mercury"
@@ -61,5 +75,6 @@ module.exports = function(defaultFuncs, api, ctx) {
           return callback(err);
         });
     });
+    return returnPromise;
   };
 };

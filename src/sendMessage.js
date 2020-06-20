@@ -332,7 +332,7 @@ module.exports = function (defaultFuncs, api, ctx) {
       (utils.getType(threadID) === "Function" ||
         utils.getType(threadID) === "AsyncFunction")
     ) {
-      return callback({ error: "Pass a threadID as a second argument." });
+      return threadID({ error: "Pass a threadID as a second argument." });
     }
     if (
       !replyToMessage &&
@@ -342,8 +342,20 @@ module.exports = function (defaultFuncs, api, ctx) {
       callback = function () { };
     }
 
+    var resolveFunc = function(){};
+    var rejectFunc = function(){};
+    var returnPromise = new Promise(function (resolve, reject) {
+      resolveFunc = resolve;
+      rejectFunc = reject;
+    });
+
     if (!callback) {
-      callback = function () { };
+      callback = function (err, friendList) {
+        if (err) {
+          return rejectFunc(err);
+        }
+        resolveFunc(friendList);
+      };
     }
 
     var msgType = utils.getType(msg);
@@ -441,5 +453,7 @@ module.exports = function (defaultFuncs, api, ctx) {
         )
       )
     );
+
+    return returnPromise;
   };
 };

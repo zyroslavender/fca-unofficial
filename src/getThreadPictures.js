@@ -5,8 +5,20 @@ var log = require("npmlog");
 
 module.exports = function(defaultFuncs, api, ctx) {
   return function getThreadPictures(threadID, offset, limit, callback) {
+    var resolveFunc = function(){};
+    var rejectFunc = function(){};
+    var returnPromise = new Promise(function (resolve, reject) {
+      resolveFunc = resolve;
+      rejectFunc = reject;
+    });
+
     if (!callback) {
-      throw { error: "getThreadPictures: need callback" };
+      callback = function (err, friendList) {
+        if (err) {
+          return rejectFunc(err);
+        }
+        resolveFunc(friendList);
+      };
     }
 
     var form = {
@@ -62,5 +74,6 @@ module.exports = function(defaultFuncs, api, ctx) {
         log.error("Error in getThreadPictures", err);
         callback(err);
       });
+    return returnPromise;
   };
 };

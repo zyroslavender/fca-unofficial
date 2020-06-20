@@ -11,8 +11,20 @@ module.exports = function(defaultFuncs, api, ctx) {
       };
     }
 
+    var resolveFunc = function(){};
+    var rejectFunc = function(){};
+    var returnPromise = new Promise(function (resolve, reject) {
+      resolveFunc = resolve;
+      rejectFunc = reject;
+    });
+
     if (!callback) {
-      callback = function() {};
+      callback = function (err, friendList) {
+        if (err) {
+          return rejectFunc(err);
+        }
+        resolveFunc(friendList);
+      };
     }
 
     var form = {
@@ -43,5 +55,7 @@ module.exports = function(defaultFuncs, api, ctx) {
         log.error("handleFriendRequest", err);
         return callback(err);
       });
+
+    return returnPromise;
   };
 };

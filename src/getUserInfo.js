@@ -7,6 +7,7 @@ function formatData(data) {
   var retObj = {};
 
   for (var prop in data) {
+    // eslint-disable-next-line no-prototype-builtins
     if (data.hasOwnProperty(prop)) {
       var innerObj = data[prop];
       retObj[prop] = {
@@ -28,8 +29,20 @@ function formatData(data) {
 
 module.exports = function(defaultFuncs, api, ctx) {
   return function getUserInfo(id, callback) {
+    var resolveFunc = function(){};
+    var rejectFunc = function(){};
+    var returnPromise = new Promise(function (resolve, reject) {
+      resolveFunc = resolve;
+      rejectFunc = reject;
+    });
+
     if (!callback) {
-      throw { error: "getUserInfo: need callback" };
+      callback = function (err, friendList) {
+        if (err) {
+          return rejectFunc(err);
+        }
+        resolveFunc(friendList);
+      };
     }
 
     if (utils.getType(id) !== "Array") {
@@ -53,5 +66,7 @@ module.exports = function(defaultFuncs, api, ctx) {
         log.error("getUserInfo", err);
         return callback(err);
       });
+
+    return returnPromise;
   };
 };

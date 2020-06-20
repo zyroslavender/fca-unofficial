@@ -730,7 +730,6 @@ module.exports = function (defaultFuncs, api, ctx) {
   };
 
   return function (callback) {
-    var listening = true;
     class MessageEmitter extends EventEmitter {
       stopListening(callback) {
         callback = callback || (() => { });
@@ -743,7 +742,6 @@ module.exports = function (defaultFuncs, api, ctx) {
           ctx.mqttClient.end(false, function (...data) {
             callback(data);
             ctx.mqttClient = undefined;
-            listening = false;
           });
         }
       }
