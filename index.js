@@ -284,14 +284,14 @@ function makeLogin(jar, email, password, loginOptions, callback, prCallback) {
               if (html.indexOf("checkpoint/?next") > -1) {
                 setTimeout(() => {
                   checkVerified = setInterval((form) => {
-                    utils
+                    /* utils
                       .post("https://www.facebook.com/login/approvals/approved_machine_check/", jar, form, loginOptions, null, {
                         "Referer": "https://www.facebook.com/checkpoint/?next"
                       })
                       .then(utils.saveCookies(jar))
                       .then(res => {
                         try {
-                          JSON.parse(res.body.replace(/for\s*\(\s*;\s*;\s*\)\s*;\s*/, ""));
+                          JSON.parse(res.body.replace(/for\s*\(\s*;\s*;\s*\)\s*;\s*()/, ""));
                         } catch (ex) {
                           clearInterval(checkVerified);
                           log.info("login", "Verified from browser. Logging in...");
@@ -300,7 +300,7 @@ function makeLogin(jar, email, password, loginOptions, callback, prCallback) {
                       })
                       .catch(ex => {
                         log.error("login", ex);
-                      });
+                      }); */
                   }, 5000, {
                     fb_dtsg: form.fb_dtsg,
                     jazoest: form.jazoest,
@@ -375,7 +375,7 @@ function makeLogin(jar, email, password, loginOptions, callback, prCallback) {
                         });
                     } else {
                       utils
-                        .post("https://www.facebook.com/login/approvals/approved_machine_check/", jar, form, loginOptions, null, {
+                        .post("https://www.facebook.com/checkpoint/?next=https%3A%2F%2Fwww.facebook.com%2Fhome.php", jar, form, loginOptions, null, {
                           "Referer": "https://www.facebook.com/checkpoint/?next"
                         })
                         .then(utils.saveCookies(jar))
