@@ -106,10 +106,8 @@ function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
     log.error("listenMqtt", err);
     mqttClient.end();
     if (ctx.globalOptions.autoReconnect) {
-      ctx.t_mqttCalled = false;
       getSeqID();
     } else {
-      ctx.t_mqttCalled = false;
       globalCallback({
         type: "stop_listen",
         error: "Connection refused: Server unavailable"
@@ -141,27 +139,21 @@ function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
       queue.device_params = null;
     }
 
-    if (ctx.t_mqttCalled) {
-      ctx.t_mqttCalled = false;
-      mqttClient.end();
-      if (ctx.globalOptions.autoReconnect) {
-        getSeqID();
-      } else {
-        globalCallback({
-          type: "stop_listen",
-          error: "Connection refused: MQTT client reconnection detected."
-        }, null);
-      }
-      return;
-    } else {
-      ctx.t_mqttCalled = true;
-    }
-
     mqttClient.publish(topic, JSON.stringify(queue), { qos: 1, retain: false });
-    globalCallback({
-      type: "ready",
-      error: null
-    });
+
+    var rTimeout = setTimeout(function () {
+      mqttClient.end();
+      getSeqID();
+    }, 5000);
+
+    ctx.tmsWait = function () {
+      clearTimeout(rTimeout);
+      ctx.globalOptions.emitReady ? globalCallback({
+        type: "ready",
+        error: null
+      }) : "";
+      delete ctx.tmsWait;
+    };
   });
 
   mqttClient.on('message', function (topic, message, _packet) {
@@ -171,6 +163,10 @@ function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
       return log.error("listenMqtt", ex);
     }
     if (topic === "/t_ms") {
+      if (ctx.tmsWait && typeof ctx.tmsWait == "function") {
+        ctx.tmsWait();
+      }
+
       if (jsonMessage.firstDeltaSeqId && jsonMessage.syncToken) {
         ctx.lastSeqId = jsonMessage.firstDeltaSeqId;
         ctx.syncToken = jsonMessage.syncToken;
