@@ -62,6 +62,9 @@ function setOptions(globalOptions, options) {
       case 'autoReconnect':
         globalOptions.autoReconnect = Boolean(options.autoReconnect);
         break;
+      case 'emitReady':
+        globalOptions.emitReady = Boolean(options.emitReady);
+        break;
       default:
         log.warn("setOptions", "Unrecognized option given to setOptions: " + key);
         break;
@@ -557,6 +560,7 @@ function login(loginData, options, callback) {
     autoReconnect: true,
     logRecordSize: defaultLogRecordSize,
     online: true,
+    emitReady: false,
     userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/600.3.18 (KHTML, like Gecko) Version/8.0.3 Safari/600.3.18"
   };
 
