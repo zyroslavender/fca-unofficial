@@ -121,6 +121,8 @@ login(credentials, (err, api) => {
 });
 ```
 
+Alternative: Use [c3c-fbstate](https://github.com/lequanglam/c3c-fbstate) to get fbstate.json (appstate.json)
+
 ------------------------------------
 
 ### Listening to a chat
