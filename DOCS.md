@@ -620,13 +620,14 @@ Takes a threadID and a callback.  Works for both single-user and group threads.
 
 __Arguments__
 * `threadID`: A threadID corresponding to the target thread.
-* `callback(err, info)`: If `err` is `null`, `info` will contain the following properties: * `callback(err, arr)`: A callback called when the query is done (either with an error or with an confirmation object). `arr` is an array of thread object containing the following properties:
+* `callback(err, info)`: If `err` is `null`, `info` will contain the following properties:
 
 | Key   |      Description      |
 |----------|:-------------:|
 | threadID | ID of the thread |
 | participantIDs |    Array of user IDs in the thread   |
-| name | Name of the thread. Usually the name of the user. In group chats, this will be empty if the name of the group chat is unset. |
+| threadName | Name of the thread. Usually the name of the user. In group chats, this will be empty if the name of the group chat is unset. |
+| userInfo | An array contains info of members, which has the same structure as [`getUserInfo`](#getUserInfo), but add a key `id`, contain ID of member currently at. |
 | nicknames |    Map of nicknames for members of the thread. If there are no nicknames set, this will be null.   |
 | unreadCount | Number of unread messages |
 | messageCount | Number of messages |
@@ -643,6 +644,7 @@ __Arguments__
 | color | String form of the custom color in hexadecimal form. |
 | adminIDs | Array of user IDs of the admins of the thread. Empty array if unset. |
 | approvalMode | `true` or `false`, used to check if this group requires admin approval to add users |
+| approvalQueue | Array of object that has the following keys: <ul><li>`inviterID`: ID of the user invited the person to the group</li><li>`requesterID`: ID of the person waiting to be approved</li><li>`timestamp`: Request timestamp</li></ul> |
 
 ---------------------------------------
 

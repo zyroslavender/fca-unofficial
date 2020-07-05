@@ -94,24 +94,37 @@ function buildAPI(globalOptions, html, jar) {
 
   var clientID = (Math.random() * 2147483648 | 0).toString(16);
 
-  var mqttData = (html.match(/(\["MqttWebConfig",\[\],{fbid:")(.+?)(",appID:219994525426954,endpoint:")(.+?)(",pollingEndpoint:")(.+?)(3790])/g) || [])[0];
-  var mqttEndpoint = null;
-  var region = null;
+
+  let oldFBMQTTMatch = html.match(/irisSeqID:"(.+?)",appID:219994525426954,endpoint:"(.+?)"/);
+  let mqttEndpoint = null;
+  let region = null;
+  let irisSeqID = null;
   var noMqttData = null;
-  if (!mqttData) {
-    log.warn("login", "Cannot get MQTT endpoint & region.");
-    noMqttData = html;
+
+  if (oldFBMQTTMatch) {
+    irisSeqID = oldFBMQTTMatch[1];
+    mqttEndpoint = oldFBMQTTMatch[2];
+    region = new URL(mqttEndpoint).searchParams.get("region").toUpperCase();
+    log.info("login", `Got this account's message region: ${region}`);
   } else {
-    try {
-      var mqttDataParsed = eval(mqttData)[2];
-      mqttEndpoint = mqttDataParsed.endpoint;
-      region = new URL(mqttEndpoint).searchParams.get("region").toLocaleUpperCase();
+    let newFBMQTTMatch = html.match(/{"app_id":"219994525426954","endpoint":"(.+?)","iris_seq_id":"(.+?)"}/);
+    if (newFBMQTTMatch) {
+      irisSeqID = newFBMQTTMatch[2];
+      mqttEndpoint = newFBMQTTMatch[1].replace(/\\\//g, "/");
+      region = new URL(mqttEndpoint).searchParams.get("region").toUpperCase();
       log.info("login", `Got this account's message region: ${region}`);
-      log.verbose("login", `MQTT endpoint: ${mqttEndpoint}`);
-      log.verbose("login", `Polling endpoint: ${mqttDataParsed.pollingEndpoint} (unused)`);
-    } catch (ex) {
-      log.error("login", ex.toString());
-      noMqttData = html;
+    } else {
+      let legacyFBMQTTMatch = html.match(/(\["MqttWebConfig",\[\],{fbid:")(.+?)(",appID:219994525426954,endpoint:")(.+?)(",pollingEndpoint:")(.+?)(3790])/);
+      if (legacyFBMQTTMatch) {
+        mqttEndpoint = legacyFBMQTTMatch[4];
+        region = new URL(mqttEndpoint).searchParams.get("region").toUpperCase();
+        log.warn("login", `Cannot get sequence ID with new RegExp. Fallback to old RegExp (without seqID)...`);
+        log.info("login", `Got this account's message region: ${region}`);
+        log.info("login", `[Unused] Polling endpoint: ${legacyFBMQTTMatch[6]}`);
+      } else {
+        log.warn("login", "Cannot get MQTT region & sequence ID.");
+        noMqttData = html;
+      }
     }
   }
 
@@ -125,10 +138,11 @@ function buildAPI(globalOptions, html, jar) {
     access_token: 'NONE',
     clientMutationId: 0,
     mqttClient: undefined,
-    lastSeqId: 0,
+    lastSeqId: irisSeqID,
     syncToken: undefined,
-    mqttEndpoint: null,
-    region: region
+    mqttEndpoint,
+    region,
+    firstListen: true
   };
 
   var api = {
@@ -474,13 +488,13 @@ function loginHelper(appState, email, password, globalOptions, callback, prCallb
 
     // Load the main page.
     mainPromise = utils
-      .get('https://www.facebook.com/', jar, null, globalOptions)
+      .get('https://www.facebook.com/', jar, null, globalOptions, { noRef: true })
       .then(utils.saveCookies(jar));
   } else {
     // Open the main page, then we login with the given credentials and finally
     // load the main page again (it'll give us some IDs that we need)
     mainPromise = utils
-      .get("https://www.facebook.com/", null, null, globalOptions)
+      .get("https://www.facebook.com/", null, null, globalOptions, { noRef: true })
       .then(utils.saveCookies(jar))
       .then(makeLogin(jar, email, password, globalOptions, callback, prCallback))
       .then(function () {

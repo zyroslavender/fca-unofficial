@@ -83,7 +83,7 @@ function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
         'Cookie': cookies,
         'Origin': 'https://www.facebook.com',
         'User-Agent': ctx.globalOptions.userAgent,
-        'Referer': 'https://www.facebook.com',
+        'Referer': 'https://www.facebook.com/',
         'Host': new URL(host).hostname //'edge-chat.facebook.com'
       },
       origin: 'https://www.facebook.com',
@@ -756,7 +756,7 @@ module.exports = function (defaultFuncs, api, ctx) {
     });
 
     //Reset some stuff
-    ctx.lastSeqId = 0;
+    if (!ctx.firstListen) ctx.lastSeqId = null;
     ctx.syncToken = undefined;
     ctx.t_mqttCalled = false;
 
@@ -777,7 +777,12 @@ module.exports = function (defaultFuncs, api, ctx) {
       })
     };
 
-    getSeqID();
+    if (!ctx.firstListen || !ctx.lastSeqId) {
+      getSeqID();
+    } else {
+      listenMqtt(defaultFuncs, api, ctx, globalCallback);
+    }
+    ctx.firstListen = false;
     return msgEmitter;
   };
 };

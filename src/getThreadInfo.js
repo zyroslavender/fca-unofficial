@@ -57,10 +57,19 @@ function formatThreadGraphQLResponse(data) {
   return {
     threadID: threadID,
     threadName: messageThread.name,
-    participantIDs: messageThread.all_participants.edges.map(function(d) {
-      //Debugged with an Android phone and commited changes with an iPhone 5s. kill me tks - UIRI 2020
-      return d.node.messaging_actor.id;
-    }),
+    participantIDs: messageThread.all_participants.edges.map(d => d.node.messaging_actor.id),
+    userInfo: messageThread.all_participants.edges.map(d => ({
+      id: d.node.messaging_actor.id,
+      name: d.node.messaging_actor.name,
+      firstName: d.node.messaging_actor.short_name,
+      vanity: d.node.messaging_actor.username,
+      thumbSrc: d.node.messaging_actor.big_image_src.uri,
+      profileUrl: d.node.messaging_actor.big_image_src.uri,
+      gender: d.node.messaging_actor.gender,
+      type: d.node.messaging_actor.__typename,
+      isFriend: d.node.messaging_actor.is_viewer_friend,
+      isBirthday: !!d.node.messaging_actor.is_birthday //not sure?
+    })),
     unreadCount: messageThread.unread_count,
     messageCount: messageThread.messages_count,
     timestamp: messageThread.updated_time_precise,
@@ -94,9 +103,14 @@ function formatThreadGraphQLResponse(data) {
         : {},
     adminIDs: messageThread.thread_admins,
     approvalMode: Boolean(messageThread.approval_mode),
+    approvalQueue: messageThread.group_approval_queue.nodes.map(a => ({
+      inviterID: a.inviter.id,
+      requesterID: a.requester.id,
+      timestamp: a.request_timestamp,
+      request_source: a.request_source // @Undocumented
+    })),
 
     // @Undocumented
-    topEmojis: messageThread.top_emojis,
     reactionsMuteMode: messageThread.reactions_mute_mode.toLowerCase(),
     mentionsMuteMode: messageThread.mentions_mute_mode.toLowerCase(),
     isPinProtected: messageThread.is_pin_protected,
@@ -147,11 +161,12 @@ module.exports = function(defaultFuncs, api, ctx) {
     var form = {
       queries: JSON.stringify({
         o0: {
-          // This doc_id is valid as of June 27th, 2020
+          // This doc_id is valid as of July 5th, 2020
+          // doc_id from June 27th, 2020: 3221478104571047
           // doc_id from June 7th, 2020: 2925954077452480
           // doc_id from May 27th, 2020: 2647524395352386
           // doc_id from February 1st, 2018: 1498317363570230
-          doc_id: "3221478104571047",
+          doc_id: "3175508215847619",
           query_params: {
             id: threadID,
             message_limit: 0,
