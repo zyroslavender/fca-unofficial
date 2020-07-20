@@ -161,12 +161,8 @@ module.exports = function(defaultFuncs, api, ctx) {
     var form = {
       queries: JSON.stringify({
         o0: {
-          // This doc_id is valid as of July 5th, 2020
-          // doc_id from June 27th, 2020: 3221478104571047
-          // doc_id from June 7th, 2020: 2925954077452480
-          // doc_id from May 27th, 2020: 2647524395352386
-          // doc_id from February 1st, 2018: 1498317363570230
-          doc_id: "3175508215847619",
+          // This doc_id is valid as of July 20th, 2020
+          doc_id: "3449967031715030",
           query_params: {
             id: threadID,
             message_limit: 0,
