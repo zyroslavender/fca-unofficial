@@ -32,7 +32,7 @@
     "websocket-stream": "^5.5.0"
   },
   "engines": {
-    "node": ">=6.x"
+    "node": ">=10.x"
   },
   "devDependencies": {
     "eslint": "^4.19.1",
@@ -42,6 +42,7 @@
   "eslintConfig": {
     "env": {
       "es6": true,
+      "es2017": true,
       "node": true
     },
     "extends": "eslint:recommended",
@@ -60,7 +61,8 @@
       "no-unused-vars": [
         1,
         {
-          "argsIgnorePattern": "^_"
+          "argsIgnorePattern": "^_",
+          "varsIgnorePattern": "^_"
         }
       ],
       "no-empty": [

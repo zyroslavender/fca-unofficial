@@ -300,7 +300,7 @@ function makeLogin(jar, email, password, loginOptions, callback, prCallback) {
               var form = utils.arrToForm(arr);
               if (html.indexOf("checkpoint/?next") > -1) {
                 setTimeout(() => {
-                  checkVerified = setInterval((form) => {
+                  checkVerified = setInterval((_form) => {
                     /* utils
                       .post("https://www.facebook.com/login/approvals/approved_machine_check/", jar, form, loginOptions, null, {
                         "Referer": "https://www.facebook.com/checkpoint/?next"
@@ -505,7 +505,7 @@ function loginHelper(appState, email, password, globalOptions, callback, prCallb
   }
 
   var ctx = null;
-  var defaultFuncs = null;
+  var _defaultFuncs = null;
   var api = null;
 
   mainPromise = mainPromise
@@ -524,7 +524,7 @@ function loginHelper(appState, email, password, globalOptions, callback, prCallb
       var html = res.body;
       var stuff = buildAPI(globalOptions, html, jar);
       ctx = stuff[0];
-      defaultFuncs = stuff[1];
+      _defaultFuncs = stuff[1];
       api = stuff[2];
       return res;
     });
